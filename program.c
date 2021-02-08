@@ -1,4 +1,5 @@
 //Lab Assignment Three
+//Riley Hernandez and George Ebeling
 
 #include <stdio.h>
 #include <stdlib.h>
