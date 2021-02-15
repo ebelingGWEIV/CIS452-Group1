@@ -9,6 +9,7 @@
 #include <poll.h>
 
 #define NUM_THREADS 10
+#define MAXBYTES 80
 
 int status = 0;
 
@@ -27,8 +28,20 @@ int main() {
 
     int index = 0, requests = 0;
 
-    struct pollfd scanner = {STDIN_FILENO, POLLIN|POLLPRI};
+    fd_set readfds;
+    int    num_readable;
+    struct timeval tv;
+    int    num_bytes;
+    char   buf[MAXBYTES];
+    int    fd_stdin;
 
+    fd_stdin = fileno(stdin);
+
+    FD_ZERO(&readfds);
+    FD_SET(fileno(stdin), &readfds);
+
+    tv.tv_sec = 10;
+    tv.tv_usec = 0;
 
     printf("Please enter file name:");
 
@@ -37,7 +50,17 @@ int main() {
 
         fflush(stdout);
 
-        if(poll(&scanner, 1, 100)) {
+        num_readable = select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
+        if(num_readable == -1)
+        {
+            exit(1);
+        }
+        else if(num_readable != 0){
+            printf("\nchecking");
+            if(CheckTermination(0)) break;
+
+        }
+        else{
             /// Get the file name from the user
             printf("\nscanning");
             scanf("%s", fileName); // Blocking
@@ -48,13 +71,10 @@ int main() {
                 fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
                 exit(1);
             }
+
             index = (index > 9) ? 0 : index + 1; // Increase index by 1 and reset to 0 once over 9
 
             printf("Please enter file name:");
-        }
-        else{
-            printf("\nchecking");
-            if(CheckTermination(0)) break;
         }
 }
     printf("Waiting for worker threads to terminate...\n"); // Show that the program is closing
