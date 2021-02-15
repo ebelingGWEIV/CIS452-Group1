@@ -39,6 +39,7 @@ int main() {
 
         if(poll(&scanner, 1, 100)) {
             /// Get the file name from the user
+            printf("\nscanning");
             scanf("%s", fileName); // Blocking
             requests++; // Another request was received
 
@@ -52,6 +53,7 @@ int main() {
             printf("Please enter file name:");
         }
         else{
+            printf("\nchecking");
             if(CheckTermination(0)) break;
         }
 }
@@ -70,10 +72,10 @@ int main() {
 
 int CheckTermination(int term) {
     static int terminate = 0;
-    printf("\nterminate: %d\n", terminate);
+    printf("\nterminate1: %d\n", terminate);
     if(term != 0) {
         terminate = 1;
-        printf("\nterminate: %d\n", terminate);
+        printf("\nterminate2: %d\n", terminate);
     }
     return terminate;
 }
