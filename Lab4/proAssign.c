@@ -20,6 +20,9 @@ void sig_handler_parent(int);
 // returns :       a pointer to NULL
 // side effects:  prints a greeting
 
+///Number of currently running threads
+int runningThreads = 0;
+
 int main() {
     srand(time(0)); //give a seed to rand
 
@@ -40,7 +43,7 @@ int main() {
     FD_ZERO(&readfds);
     FD_SET(fileno(stdin), &readfds);
 
-    tv.tv_sec = 10;
+    tv.tv_sec = 5;
     tv.tv_usec = 0;
 
     printf("Please enter file name:");
@@ -51,25 +54,23 @@ int main() {
         fflush(stdout);
 
         num_readable = select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
-        if(num_readable == -1)
-        {
-            exit(1);
-        }
-        else if(num_readable != 0){
-            printf("\nchecking");
-            if(CheckTermination(0)) break;
+        if(num_readable <= 0){ //Happens when select is interrupted with a signal handler and when the timer has run out
+            if(CheckTermination(0)) {
+                break;
+            }
 
         }
         else{
             /// Get the file name from the user
-            printf("\nscanning");
             scanf("%s", fileName); // Blocking
             requests++; // Another request was received
-
             /// Create a worker thread
             if ((status = pthread_create(&thread[index], NULL, workerFunction, &fileName)) != 0) {
                 fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
                 exit(1);
+            }
+            else{
+                runningThreads++;
             }
 
             index = (index > 9) ? 0 : index + 1; // Increase index by 1 and reset to 0 once over 9
@@ -79,31 +80,26 @@ int main() {
 }
     printf("Waiting for worker threads to terminate...\n"); // Show that the program is closing
 
-    // Join with the threads (wait for them to terminate);
-    for(int i = 0; i <= NUM_THREADS - 1; i++) {
-        if ((status = pthread_join(thread[i], &thread[i])) != 0) {
-            fprintf(stderr, "join error %d: %s\n", status, strerror(status));
-            exit(1);
-        }
-    }
+    while(runningThreads); //Wait for all created threads to exit
+
     printf("\nNumber of requests received: %d\n", requests);
     return 0;
 }
 
 int CheckTermination(int term) {
     static int terminate = 0;
-    printf("\nterminate1: %d\n", terminate);
     if(term != 0) {
+        printf("terminate set\n");
         terminate = 1;
-        printf("\nterminate2: %d\n", terminate);
     }
     return terminate;
 }
 
 /* Signal Handler for the Parent Process */
 void sig_handler_parent(int signum) {
-    printf("\ngot a thing\n");
+    printf("got a thing\n");
    CheckTermination(1);
+   return;
 }
 
 void* workerFunction (void* arg)
@@ -128,5 +124,6 @@ void* workerFunction (void* arg)
     printf("Worker thread got %s\n", val_ptr);
 
     // Thread has completed and can exit cleanly
+    runningThreads--;
     pthread_exit(0);
 }
