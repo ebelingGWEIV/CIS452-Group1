@@ -88,6 +88,7 @@ int main() {
 
     while(runningThreads); //Wait for all created threads to exit
 
+    printf("All threads have been closed\n");
     printf("\nNumber of requests received: %d\n", requests);
     return 0;
 }
