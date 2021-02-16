@@ -56,7 +56,6 @@ int main() {
         {
             /// Get the file name from the user
             if(CheckTermination(0)) break; //Check one more time before entering the blocking call
-            printf("scanning");
             char c;
 
             while((c = getchar()) != EOF && c != '\n')// Blocking
@@ -84,11 +83,11 @@ int main() {
         }
         if(CheckTermination(0)) break;
 }
-    printf("Waiting for worker threads to terminate...\n"); // Show that the program is closing
-
+    printf("\nWaiting for worker threads to terminate..."); // Show that the program is closing
+    fflush(stdout);
     while(runningThreads); //Wait for all created threads to exit
 
-    printf("All threads have been closed\n");
+    printf("\nAll threads have been closed");
     printf("\nNumber of requests received: %d\n", requests);
     return 0;
 }
@@ -106,7 +105,6 @@ int CheckTermination(int term) {
     static int terminate = 0;
     if(term != 0) {
         terminate = 1;
-        printf("term is 1");
     }
     return terminate;
 }
@@ -138,7 +136,8 @@ void* workerFunction (void* arg)
         int sleepTime = rand() % (timeMax + 1 - timeMin);
         sleep(sleepTime);
     }
-    printf("Worker thread found: %s\n", word);
+    printf("\nWorker thread found: %s", word);
+    fflush(stdout);
 
     // Thread has completed and can exit cleanly
     runningThreads--;
