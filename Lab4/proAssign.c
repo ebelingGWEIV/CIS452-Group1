@@ -9,13 +9,14 @@
 #include <poll.h>
 
 #define NUM_THREADS 10
-#define MAXBYTES 80
+#define WRDLEN 20
 
 int status = 0;
 
 void* workerFunction (void* arg);
 int CheckTermination(int);
 void sig_handler_parent(int);
+void ResetString(char * str, int len);
 // arguments :  arg is an untyped pointer pointing to a string
 // returns :       a pointer to NULL
 // side effects:  prints a greeting
@@ -28,20 +29,18 @@ int main() {
 
     signal(SIGINT, sig_handler_parent);  //Register the signal handler
     pthread_t thread[NUM_THREADS]; //Create array of usable threads to keep track of
-
+    char words[NUM_THREADS][20];
     int index = 0, requests = 0;
 
     fd_set readfds;
     int    num_readable;
     struct timeval tv;
-    int    num_bytes;
-    char   buf[MAXBYTES];
     int    fd_stdin;
 
     fd_stdin = fileno(stdin);
 
     FD_ZERO(&readfds);
-    FD_SET(fileno(stdin), &readfds);
+    FD_SET(0, &readfds);
 
     tv.tv_sec = 5;
     tv.tv_usec = 0;
@@ -49,23 +48,25 @@ int main() {
     printf("Please enter file name:");
 
     while (1) { //This is going to need to have a break condition
-        char fileName[20]; //Hopefully, this can be a local variable. If there is undefined behavior occuring in the worker thread, this being deallocated and reallocated as a new filename might be the cause.
 
         fflush(stdout);
 
-        num_readable = select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
-        if(num_readable <= 0){ //Happens when select is interrupted with a signal handler and when the timer has run out
-            if(CheckTermination(0)) {
-                break;
+        select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
+        if(FD_ISSET(0,&readfds))
+        {
+            /// Get the file name from the user
+            if(CheckTermination(0)) break; //Check one more time before entering the blocking call
+            printf("scanning");
+            char c;
+
+            while((c = getchar()) != EOF && c != '\n')// Blocking
+            {
+                strncat(words[index], &c, sizeof(char));
             }
 
-        }
-        else{
-            /// Get the file name from the user
-            scanf("%s", fileName); // Blocking
             requests++; // Another request was received
             /// Create a worker thread
-            if ((status = pthread_create(&thread[index], NULL, workerFunction, &fileName)) != 0) {
+            if ((status = pthread_create(&thread[index], NULL, workerFunction, &words[index])) != 0) {
                 fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
                 exit(1);
             }
@@ -74,9 +75,14 @@ int main() {
             }
 
             index = (index > 9) ? 0 : index + 1; // Increase index by 1 and reset to 0 once over 9
-
+            ResetString(words[index], WRDLEN);
             printf("Please enter file name:");
         }
+        else
+        {
+            FD_SET(0, &readfds); // place stdin back in the fd set
+        }
+        if(CheckTermination(0)) break;
 }
     printf("Waiting for worker threads to terminate...\n"); // Show that the program is closing
 
@@ -86,18 +92,26 @@ int main() {
     return 0;
 }
 
+void ResetString(char * str, int len)
+{
+    while(len > 0)
+    {
+        str[len-1] = '\0';
+        len--;
+    }
+}
+
 int CheckTermination(int term) {
     static int terminate = 0;
     if(term != 0) {
-        printf("terminate set\n");
         terminate = 1;
+        printf("term is 1");
     }
     return terminate;
 }
 
 /* Signal Handler for the Parent Process */
 void sig_handler_parent(int signum) {
-    printf("got a thing\n");
    CheckTermination(1);
    return;
 }
@@ -105,6 +119,8 @@ void sig_handler_parent(int signum) {
 void* workerFunction (void* arg)
 {
     char *val_ptr = (char *) arg;
+    char word[WRDLEN];
+    strcpy(word, val_ptr);
     int quick = 8;
     int slow = 10;
     int timeMin = 1;
@@ -121,7 +137,7 @@ void* workerFunction (void* arg)
         int sleepTime = rand() % (timeMax + 1 - timeMin);
         sleep(sleepTime);
     }
-    printf("Worker thread got %s\n", val_ptr);
+    printf("Worker thread found: %s\n", word);
 
     // Thread has completed and can exit cleanly
     runningThreads--;
