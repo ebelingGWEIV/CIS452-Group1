@@ -29,8 +29,8 @@ int main() {
 
     signal(SIGINT, sig_handler_parent);  //Register the signal handler
     pthread_t thread[NUM_THREADS]; //Create array of usable threads to keep track of
-    char words[NUM_THREADS][20];
-    int index = 0, requests = 0;
+    char words[NUM_THREADS][20]; //Create an array for the user input string
+    int index = 0, requests = 0; 
 
     fd_set readfds;
     int    num_readable;
@@ -45,15 +45,14 @@ int main() {
     tv.tv_sec = 5;
     tv.tv_usec = 0;
 
-    printf("Please enter file name:");
+    printf("Please enter file name: "); //prompt user for string
 
-    while (1) { //This is going to need to have a break condition
+    while (1) { //loop to spawn a child thread and to communicate the filename
 
-        fflush(stdout);
+        fflush(stdout); 
 
         select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
-        if(FD_ISSET(0,&readfds))
-        {
+        if(FD_ISSET(0,&readfds)) {
             /// Get the file name from the user
             if(CheckTermination(0)) break; //Check one more time before entering the blocking call
             char c;
@@ -64,7 +63,8 @@ int main() {
             }
 
             requests++; // Another request was received
-            /// Create a worker thread
+            
+	    /// Create a worker thread
             if ((status = pthread_create(&thread[index], NULL, workerFunction, &words[index])) != 0) {
                 fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
                 exit(1);
@@ -75,23 +75,25 @@ int main() {
 
             index = (index > 9) ? 0 : index + 1; // Increase index by 1 and reset to 0 once over 9
             ResetString(words[index], WRDLEN);
-            printf("Please enter file name:");
+            printf("Please enter file name: ");
         }
-        else
-        {
+        
+	else {
             FD_SET(0, &readfds); // place stdin back in the fd set
         }
+
         if(CheckTermination(0)) break;
 }
-    printf("\nWaiting for worker threads to terminate..."); // Show that the program is closing
-    fflush(stdout);
+    printf("Waiting for worker threads to terminate...\n"); // Show that the program is closing
+
     while(runningThreads); //Wait for all created threads to exit
 
-    printf("\nAll threads have been closed");
+    printf("All threads have been closed\n");
     printf("\nNumber of requests received: %d\n", requests);
     return 0;
 }
 
+/* Resets a string after the worker thread has returned */
 void ResetString(char * str, int len)
 {
     while(len > 0)
@@ -101,10 +103,12 @@ void ResetString(char * str, int len)
     }
 }
 
+/* Funciton to exit gracefully by marking when it is time to exit by the signal of ^C */
 int CheckTermination(int term) {
     static int terminate = 0;
     if(term != 0) {
         terminate = 1;
+        printf("term is 1");
     }
     return terminate;
 }
@@ -115,6 +119,8 @@ void sig_handler_parent(int signum) {
    return;
 }
 
+
+/* Worker funciton to simulate time spent performing a file access */
 void* workerFunction (void* arg)
 {
     char *val_ptr = (char *) arg;
@@ -125,19 +131,18 @@ void* workerFunction (void* arg)
     int timeMin = 1;
     int timeMax = 10;
 
-    int sleepTime = rand() % (slow + 1 - timeMin);
-    if(sleepTime <= quick)
+    int sleepTime = rand() % (slow + 1 - timeMin); //Simulates a random percentage
+    if(sleepTime <= quick) //80% probability sleep for 1 second
     {
         sleep(timeMin);
     }
-    else
+    else //20% probability sleep for 7-10 seconds
     {
         int timeMin = 7; //min time is now 7
         int sleepTime = rand() % (timeMax + 1 - timeMin);
         sleep(sleepTime);
     }
-    printf("\nWorker thread found: %s", word);
-    fflush(stdout);
+    printf("Worker thread found: %s\n", word); //print diagnostic message
 
     // Thread has completed and can exit cleanly
     runningThreads--;
