@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include "SharedStructure.h"
 
 #define FOO 4096
 
