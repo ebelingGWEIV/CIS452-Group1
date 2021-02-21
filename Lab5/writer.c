@@ -68,6 +68,8 @@ int main ()
                 strncat(message, &c, sizeof(char));
                 if(continueFlag = CheckTermination(0)) break; //Check before entering the blocking call again
             }
+            // To break the main while-loop, need to check one more time
+            if(continueFlag = CheckTermination(0)) break;
 
             //Copy the message to file
             strcpy(sharedFile->message, message);
