@@ -1,4 +1,3 @@
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -7,11 +6,14 @@
 #include <sys/shm.h>
 #include <signal.h>
 #include "SharedStructure.h"
-#include <unistd.h>
 
 #define FOO 4096
 
+void sig_handler(int);
+int CheckTermination(int term);
+
 int main () {
+    signal(SIGINT, sig_handler);  //Register the signal handler
 	int shmId;
 	int readerIndex = 0;
 	int position = 0;
@@ -39,11 +41,11 @@ int main () {
             if (sharedFile->readers[i] == 0) {
                 readerIndex = i;
                 sharedFile->readers[i] = i + 1; //tell other readers that this space is being used
-                printf("marking %d reader as: %d", i, sharedFile->readers[i]);
                 hasReaderSpot = 1;
             }
         }
-        printf("could not get a reader spot\n");
+        printf("Could not get a reader spot\n");
+
     }
     sharedFile = (struct messageStruct *) shmPtr;
 
@@ -52,14 +54,9 @@ int main () {
 		if (sharedFile->readers[readerIndex] == 0){
 			printf("Note: %s\n", sharedFile->message);
 			sharedFile->readers[readerIndex] = 1; //set the reader display status
-//			position++;
-//			fflush(stdout);
 		}
+		if(CheckTermination(0)) break;
 
-//		if (position > MESSAGE_LEN) {
-//			position = 0;
-//		}
-		
 		sharedFile = (struct messageStruct *) shmPtr;
 	}
 
@@ -69,4 +66,23 @@ int main () {
 	}
 
 	return 0;
+}
+
+/**
+ * To assist with exiting gracefully by marking when it is time to exit by the signal of ^C
+ * @param term 0 to check, 1 to set
+ * @return 1 to terminate
+ */
+int CheckTermination(int term) {
+    static int terminate = 0;
+    if(term != 0) {
+        terminate = 1;
+    }
+    return terminate;
+}
+
+/* Signal Handler for the Parent Process */
+void sig_handler(int signum) {
+    CheckTermination(1);
+    return;
 }
