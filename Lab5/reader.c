@@ -6,8 +6,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <signal.h>
-#include <time.h>
 #include "SharedStructure.h"
+#include <unistd.h>
 
 #define FOO 4096
 
@@ -18,7 +18,7 @@ int main () {
 	char *shmPtr;
 	
 	//Get the shared memory pointer to the file
-	key_t memKey = ftok("shared.txt", 101);
+	key_t memKey = ftok("test", 1);
 
 	if ((shmId = shmget(memKey, FOO, S_IRUSR)) < 0) {
 		perror ("I can't find...\n");
@@ -33,27 +33,34 @@ int main () {
 	//Usable pointer to the file
 	struct messageStruct *sharedFile = (struct messageStruct *) shmPtr; 
 	char c;
-
-	for (int i = 0; i < NUM_READERS; i++) {
-		if (sharedFile->readers[i] == 1) {
-			readerIndex = i;
-		}
-	}
+    int hasReaderSpot = 0;
+    while(!hasReaderSpot) {
+        for (int i = 0; i < NUM_READERS && !hasReaderSpot; i++) {
+            if (sharedFile->readers[i] == 0) {
+                readerIndex = i;
+                sharedFile->readers[i] = i + 1; //tell other readers that this space is being used
+                printf("marking %d reader as: %d", i, sharedFile->readers[i]);
+                hasReaderSpot = 1;
+            }
+        }
+        printf("could not get a reader spot\n");
+    }
+    sharedFile = (struct messageStruct *) shmPtr;
 
 	while(1) {
-		sharedFile = (struct messageStruct *) shmPtr;
-		if (sharedFile->readers[readerIndex] == 1){
-			printf("Note: %s", sharedFile->message);
-			sharedFile->readers[readerIndex] = 0;
-			position++;
+
+		if (sharedFile->readers[readerIndex] == 0){
+			printf("Note: %s\n", sharedFile->message);
+			sharedFile->readers[readerIndex] = 1; //set the reader display status
+//			position++;
+//			fflush(stdout);
 		}
 
-		if (position > MESSAGE_LEN) {
-			position = 0;
-		}
+//		if (position > MESSAGE_LEN) {
+//			position = 0;
+//		}
 		
 		sharedFile = (struct messageStruct *) shmPtr;
-		while(sharedFile->readers[readerIndex] != 1);
 	}
 
 	if (shmdt (shmPtr) < 0) {

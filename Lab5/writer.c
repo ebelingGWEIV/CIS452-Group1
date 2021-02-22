@@ -6,7 +6,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <signal.h>
-#include <time.h>
 #include "SharedStructure.h"
 
 #define FOO 4096
@@ -23,10 +22,9 @@ int main ()
     signal(SIGINT, sig_handler_parent);  //Register the signal handler
     int shmId;
     char *shmPtr;
-    int continueFlag = 1;
 
     //Get the shared memory pointer to the file
-    key_t memKey = ftok("shared.txt", 101);
+    key_t memKey = ftok("test", 1);
 
     if ((shmId = shmget (memKey, FOO, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0) {
         perror ("I can't get no..\n");
@@ -44,47 +42,48 @@ int main ()
     fd_stdin = fileno(stdin);
     FD_ZERO(&readfds);
     FD_SET(0, &readfds);
-    tv.tv_sec = 5;
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
 
     // Get a usable pointer to the file
     struct messageStruct *sharedFile = (struct messageStruct *)shmPtr;
 
     // Check for input and send to shared memory until flag is reset
-    while(continueFlag) {
-
-        fflush(stdout);
+    while(1) {
 
         select(fd_stdin + 1, &readfds, NULL, NULL, &tv);
         if(FD_ISSET(0,&readfds)) {
             //Check one more time before entering the blocking call
-            if(continueFlag = CheckTermination(0)) break;
+            if(CheckTermination(0)) break;
 
             //Get user message
             char c;
-            char message[MESSAGE_LEN];
+            sharedFile->message[0] = '\0'; //need to mark as 0 otherwise strcat will not remove old message
             while((c = getchar()) != EOF && c != '\n')// Blocking
             {
-                strncat(message, &c, sizeof(char));
-                if(continueFlag = CheckTermination(0)) break; //Check before entering the blocking call again
+                strncat(sharedFile->message, &c, sizeof(char));
+                printf("%c\n",c);
+                if(CheckTermination(0)) break; //Check before entering the blocking call again
             }
-            // To break the main while-loop, need to check one more time
-            if(continueFlag = CheckTermination(0)) break;
 
-            //Copy the message to file
-            strcpy(sharedFile->message, message);
+            //Wait until the message has been displayed by all readers
+            int waitingForDisplay = 1;
+            while (waitingForDisplay) {
+                if (checkDisplayStatus(sharedFile)) {
+                    resetDisplayFlags(sharedFile);
+                    printf("reseting display flags\n");
+                    waitingForDisplay = 0;
+                }
+                if(CheckTermination(0))
+                    break;
+            }
         }
-
-        //Wait until the message has been displayed by all readers
-        while (1) {
-            if (checkDisplayStatus(sharedFile)) break;
-            if(continueFlag = CheckTermination(0)) break;
+        else{
+            if(CheckTermination(0))
+                break;
         }
-
-        resetDisplayFlags(sharedFile);
     }
 
-    free(sharedFile);
     Close(shmId, shmPtr);
 
     return 0;
@@ -100,7 +99,6 @@ int CheckTermination(int term) {
     static int terminate = 0;
     if(term != 0) {
         terminate = 1;
-        printf("term is 1");
     }
     return terminate;
 }
@@ -129,12 +127,14 @@ void resetDisplayFlags(struct messageStruct *sharedFile) {
  */
 int checkDisplayStatus(const struct messageStruct *sharedFile) {
     //Check if message has been displayed
+    int numDisplayed = 0;
     for(int i = 0; i < NUM_READERS; i++)
     {
         if(sharedFile->readers[i] != 0)
-            return 0;
+            numDisplayed++;
     }
-    return 1;
+    if(numDisplayed == NUM_READERS) return 1;
+    else return 0;
 }
 
 /**
