@@ -42,7 +42,7 @@ int main ()
     fd_stdin = fileno(stdin);
     FD_ZERO(&readfds);
     FD_SET(0, &readfds);
-    tv.tv_sec = 10;
+    tv.tv_sec = 30;
     tv.tv_usec = 0;
 
     // Get a usable pointer to the file
@@ -71,17 +71,17 @@ int main ()
             while (waitingForDisplay) {
                 if (checkDisplayStatus(sharedFile)) {
                     resetDisplayFlags(sharedFile);
-                    printf("reseting display flags\n");
                     waitingForDisplay = 0;
                 }
                 if(CheckTermination(0))
                     break;
             }
         }
-        else{
-            if(CheckTermination(0))
-                break;
+        else {
+            FD_SET(0, &readfds); // place stdin back in the fd set
         }
+        if(CheckTermination(0))
+            break;
     }
 
     Close(shmId, shmPtr);
