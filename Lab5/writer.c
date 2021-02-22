@@ -8,7 +8,6 @@
 #include <signal.h>
 #include "SharedStructure.h"
 
-#define FOO 4096
 
 void clearMem(const char *shmPtr, int length);
 void Close(int shmId, const char *shmPtr);

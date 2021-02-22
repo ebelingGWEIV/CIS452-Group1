@@ -7,8 +7,6 @@
 #include <signal.h>
 #include "SharedStructure.h"
 
-#define FOO 4096
-
 void sig_handler(int);
 int CheckTermination(int term);
 
