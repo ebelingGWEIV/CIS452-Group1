@@ -43,7 +43,6 @@ int main () {
             }
         }
         //printf("Could not get a reader spot\n");
-
     }
     sharedFile = (struct messageStruct *) shmPtr;
 
