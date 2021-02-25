@@ -9,7 +9,7 @@
 
 #define SIZE 16
 
-int main ()
+int main (int argc, char *argv[])
 {
     int status;
     long int i, loop, temp, *shmPtr;
@@ -17,6 +17,10 @@ int main ()
     pid_t pid;
 
     // get value of loop variable (from command-line argument)
+    if(argc == 2) {
+        loop = atoi(argv[1]);
+        printf("loop: %d\n", loop);
+    }
 
     if ((shmId = shmget (IPC_PRIVATE, SIZE, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0) {
         perror ("i can't get no..\n");
@@ -33,6 +37,9 @@ int main ()
     if (!(pid = fork())) {
         for (i=0; i<loop; i++) {
             // swap the contents of shmPtr[0] and shmPtr[1]
+            temp = shmPtr[0];
+            shmPtr[0] = shmPtr[1];
+            shmPtr[1] = temp;
         }
         if (shmdt (shmPtr) < 0) {
             perror ("just can't let go\n");
@@ -43,6 +50,9 @@ int main ()
     else
         for (i=0; i<loop; i++) {
             // swap the contents of shmPtr[1] and shmPtr[0]
+            temp = shmPtr[1];
+            shmPtr[1] = shmPtr[0];
+            shmPtr[0] = temp;
         }
 
     wait (&status);
