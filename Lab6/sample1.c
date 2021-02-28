@@ -6,6 +6,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
+#include <sys/sem.h>
+#include <bits/ipc.h>
+#include <bits/sem.h>
 
 #define SIZE 16
 
@@ -15,11 +18,11 @@ int main (int argc, char *argv[])
     long int i, loop, temp, *shmPtr;
     int shmId;
     pid_t pid;
+    int test = SEM_UNDO;
 
     // get value of loop variable (from command-line argument)
     if(argc == 2) {
         loop = atoi(argv[1]);
-        printf("loop: %d\n", loop);
     }
 
     if ((shmId = shmget (IPC_PRIVATE, SIZE, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0) {
