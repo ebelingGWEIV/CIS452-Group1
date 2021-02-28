@@ -6,9 +6,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include <sys/sem.h>
-#include <bits/ipc.h>
-#include <bits/sem.h>
+#include "ProcessSync.h"
 
 #define SIZE 16
 
@@ -18,7 +16,6 @@ int main (int argc, char *argv[])
     long int i, loop, temp, *shmPtr;
     int shmId;
     pid_t pid;
-    int test = SEM_UNDO;
 
     // get value of loop variable (from command-line argument)
     if(argc == 2) {
