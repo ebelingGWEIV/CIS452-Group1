@@ -6,7 +6,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include "Semaphore.h"
+#include <semaphore.h>
 #include <fcntl.h>
 
 
@@ -15,11 +15,15 @@
 void OpenSharedMem(long **shmPtr, int *shmId);
 void CloseSharedMem(const long *shmPtr, int shmId);
 void Swap(long temp, long *shmPtr);
+/**
+ * @return 0 when failed
+ */
+int OpenSemaphores();
+
+void CleanupMem(int *status, const long *shmPtr, int shmId);
 
 sem_t *mySemaphore1 = NULL;
 #define MY_SEM_1 "/mySem1"
-sem_t *mySemaphore2 = NULL;
-#define MY_SEM_2 "/mySem2"
 
 int main (int argc, char *argv[])
 {
@@ -34,26 +38,19 @@ int main (int argc, char *argv[])
         loop = atoi(argv[1]);
     }
 
+    if(OpenSemaphores() != 0) { //quit if this fails
+        return 1;
+    }
+
     OpenSharedMem(&shmPtr, &shmId);
 
     shmPtr[0] = 0;
     shmPtr[1] = 1;
 
-    if(mySemaphore1 = sem_open(MY_SEM_1, O_CREAT | O_EXCL, 0666, SHM_LOCKED))
-    {
-        printf("error creating semaphore\n");
-    }
-    if(mySemaphore2 = sem_open(MY_SEM_2, O_CREAT | O_EXCL, 0666, SHM_LOCKED))
-    {
-        printf("error creating semaphore\n");
-    }
-
     if (!(pid = fork())) {
         for (i=0; i<loop; i++) {
             // swap the contents of shmPtr[0] and shmPtr[1]
-            sem_wait(mySemaphore1);
             Swap(temp, shmPtr);
-            sem_post(mySemaphore2);
         }
         if (shmdt (shmPtr) < 0) {
             perror ("just can't let go\n");
@@ -65,30 +62,36 @@ int main (int argc, char *argv[])
     else {
         for (i = 0; i < loop; i++) {
             // swap the contents of shmPtr[1] and shmPtr[0]
-            sem_post(mySemaphore2);
-            sem_wait(mySemaphore1);
             Swap(temp, shmPtr);
         }
     }
 
-    wait (&status);
+    wait (status);
+
+    sem_close(mySemaphore1);
+    sem_unlink(MY_SEM_1);
+
     printf ("values: %li\t%li\n", shmPtr[0], shmPtr[1]);
 
     CloseSharedMem(shmPtr, shmId);
 
-    sem_post(mySemaphore1);
-    sem_close(mySemaphore2);
-    sem_close(mySemaphore1);
-    sem_unlink(MY_SEM_1);
-    sem_unlink(MY_SEM_2);
-
     return 0;
 }
 
+int OpenSemaphores() {
+    if(mySemaphore1 = sem_open(MY_SEM_1, O_CREAT | S_IRUSR | S_IWUSR, 10) == SEM_FAILED)
+    {
+        printf("error creating semaphore1\n");
+        return 1;
+    }
+}
+
 void Swap(long temp, long *shmPtr) {
+    sem_wait(mySemaphore1);
     temp = shmPtr[0];
     shmPtr[0] = shmPtr[1];
     shmPtr[1] = temp;
+    sem_post(mySemaphore1);
 }
 
 void CloseSharedMem(const long *shmPtr, int shmId) {
