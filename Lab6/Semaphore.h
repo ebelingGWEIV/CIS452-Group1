@@ -1,48 +1,42 @@
 #ifndef LAB6_SEMAPHORE_H
 #define LAB6_SEMAPHORE_H
 
-#include <stdio.h>
 #include <semaphore.h>
+#include <fcntl.h>
 
-struct semaphore{
-    sig_atomic_t val;
-    void (*nextCall) (); //a function pointer to next function to call
-};
+#define LOCKED 0
 
+sem_t *mySemaphore1 = NULL;
+sem_t *mySemaphore2 = NULL;
+#define MY_SEM_1 "/mySem1"
+#define MY_SEM_2 "/mySem2"
 
-
-void Wait(struct  mySemaphore *);
-void Signal(struct mySemaphore *);
-struct mySemaphore1 compare_and_swap(struct mySemaphore1 *, int, int);
-
-/*
- *
+/**
+ * Close and unlink the semaphores.
  */
-struct mySemaphore1 compare_and_swap(struct  mySemaphore1 *value, int expected, int new_value)
-{
-    struct mySemaphore1 temp = *value;
-    if(value->val == expected)
-        value->val = new_value;
-    return temp;
+void CloseSemaphores() {
+    sem_close(mySemaphore1);
+    sem_close(mySemaphore2);
+    sem_unlink(MY_SEM_1);
+    sem_unlink(MY_SEM_2);
 }
 
 /**
- * Wait until a spot is available.
+ * Open 2 semaphores in the locked state.
+ * @return
  */
-void Wait(struct mySemaphore1 *sema)
-{
-    while (compare_and_swap(sema, 1, 0).val < 1)
-        ;
-    sema->nextCall = Signal;
-}
-
-/**
- * Signal that the spot is available again.
- */
-void Signal(struct mySemaphore1 *sema)
-{
-    while(compare_and_swap(sema, 0, 1).val > 0);
-    sema->nextCall = Wait;
+int OpenSemaphores() {
+    if((mySemaphore1 = sem_open(MY_SEM_1, O_CREAT | O_EXCL, 0666, LOCKED) )== SEM_FAILED)
+    {
+        printf("error creating semaphore1\n");
+        return 1;
+    }
+    if((mySemaphore2 = sem_open(MY_SEM_2, O_CREAT | O_EXCL, 0666, LOCKED) )== SEM_FAILED)
+    {
+        printf("error creating semaphore2\n");
+        return 1;
+    }
+    return 0;
 }
 
 #endif //LAB6_SEMAPHORE_H
