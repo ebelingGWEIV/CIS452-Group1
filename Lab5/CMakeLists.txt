@@ -3,4 +3,4 @@ project(Lab5 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(Lab5 program.c reader.c writer.c)
+add_executable(Lab5 writer.c reader.c SharedStructure.h)
