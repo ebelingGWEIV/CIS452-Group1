@@ -5,4 +5,14 @@ set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 
+set( #Insert header files here
+        TARGET_H
+        ProcessNode.h
+)
+set( #insert header files here
+        TARGET_SRC
+        ProcessNode.c
+)
+
+
 add_executable(Project1 main.c)

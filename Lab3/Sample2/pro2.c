@@ -26,7 +26,7 @@ int main()
     }
 // point B
 
-   else if (!pid) { //parent prcess only
+   else if (!pid) { //parent process only
         dup2 (fd[WRITE], STDOUT_FILENO);
 // point C
         close (fd[READ]);
