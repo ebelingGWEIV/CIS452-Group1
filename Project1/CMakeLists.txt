@@ -9,7 +9,7 @@ set( #Insert header files here
         TARGET_H
         ProcessNode.h
 )
-set( #insert header files here
+set( #insert source files here
         TARGET_SRC
         ProcessNode.c
 )
