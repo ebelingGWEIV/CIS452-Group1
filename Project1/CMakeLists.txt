@@ -4,15 +4,15 @@ project(Project1 C)
 set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+#
+#set( #Insert header files here
+#        TARGET_H
+#        ProcessNode.h
+#        SharedMem.h
+#)
+#set( #insert source files here
+#        TARGET_SRC
+#)
 
-set( #Insert header files here
-        TARGET_H
-        ProcessNode.h
-)
-set( #insert source files here
-        TARGET_SRC
-        ProcessNode.c
-)
 
-
-add_executable(Project1 main.c)
+add_executable(Project1 main.c ProcessNode.h SharedMem.h SigHandler.h Semaphore.h)
