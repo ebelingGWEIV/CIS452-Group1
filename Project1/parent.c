@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 void Execute(char * command[]);
 
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
     }
 
     //CLion needs a full path
-    char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child.out";                 // Pointer to the file name
+    char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";                 // Pointer to the file name
     //char file[] = "./child.out
 
     //Fork to create all of the processes, attach pipes to each process
@@ -35,7 +36,8 @@ int main(int argc, char *argv[])
 
             args[0] = file;
             args[1] = "2";
-            args[2] = NULL;
+            args[2] = "3";
+            args[3] = NULL;
 
             if( access( file, F_OK ) == 0 ) {
                 Execute(args);
@@ -51,7 +53,6 @@ int main(int argc, char *argv[])
 
 
 /***
- * This skeleton of this function came from Sample Program 3.
  * Creates a child that runs the command using execvp.
  * @param command The parsed command
  */
@@ -59,9 +60,6 @@ void Execute(char * command[])
 {
     id_t pid, child;
     int status = 0;
-    struct timeval start, end;
-    long startSwitch, endSwitch;
-    struct rusage usage;
 
     if ((pid = fork()) < 0) {
         perror("fork failure"); //This error seems big enough that exiting is okay
@@ -69,27 +67,17 @@ void Execute(char * command[])
     }
     else if (pid == 0) {
         if (execvp(command[0], command) < 0) {
-            perror("Failed to execute command");
+            fprintf(stderr, "%s\n", strerror(errno));
             exit(1);
         }
     }
     else {
-        ///4. Additional Requirement
-        //Get start time
-        getrusage(RUSAGE_CHILDREN, &usage);
-        start = usage.ru_utime;
-
         child = wait(&status);
-
-        //Get end time
-        getrusage(RUSAGE_CHILDREN, &usage);
-        end = usage.ru_utime;
 
         if(status > 0) printf("\nCommand failed to execute %d\n", status);
 
         else {
-            printf("User CPU time: %ld seconds and %ld micro-seconds\n", (end.tv_sec - start.tv_sec),
-                   (end.tv_usec - start.tv_usec));
+            printf("\nIt finally worked\n");
         }
         return;
     }
