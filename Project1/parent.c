@@ -10,6 +10,9 @@
 #define READ 0
 #define WRITE 1
 
+#define FDWRITE 6
+#define FDREAD 5
+
 id_t Execute(char * command[], int procNum, int nextNum);
 
 void StartChildren(int numProc);
@@ -32,6 +35,7 @@ void InitPipes(int numProc)
 
 int main(int argc, char *argv[])
 {
+    printf("starting\n");
     int numProc;
     if(argc == 2) {
         numProc = atoi(argv[1]);
@@ -52,7 +56,13 @@ int main(int argc, char *argv[])
     free(childID);
 }
 
-void StartChildren(int numProc) {//CLion needs a full path               // Pointer to the file name
+void StartChildren(int numProc)
+{
+    dup2(fd[0][READ], FDREAD); //Read on yours
+    dup2(fd[1][WRITE], FDWRITE); //Write on the next
+    close(fd[0][READ]);
+    close(fd[1][WRITE]);
+
 
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
@@ -82,14 +92,6 @@ void StartChildren(int numProc) {//CLion needs a full path               // Poin
                 exit(1);
             }
     }
-    dup2(fd[0][READ], STDIN_FILENO); //Read on yours
-    dup2(fd[1][WRITE], STDOUT_FILENO); //Write on the next
-    close(fd[0][READ]);
-    close(fd[1][WRITE]);
-
-    fprintf(stdout, "can i print still? fprintf\n");
-    printf("can i print still? printf\n");
-    fputs("can i print still? fputs\n", stdout);
 }
 
 
@@ -107,14 +109,15 @@ id_t Execute(char * command[], int procNum, int nextNum)
         exit(1);
     }
     else if (pid == 0) {
-        dup2(fd[procNum][READ], 6); //Read on yours
-        dup2(fd[nextNum][WRITE], 5); //Write on the next
+        dup2(fd[procNum][READ], FDREAD); //Read on yours
+        dup2(fd[nextNum][WRITE], FDWRITE); //Write on the next
         close(fd[procNum][READ]);
         close(fd[nextNum][WRITE]);
 
-        fprintf(stdout, "can i print still? fprintf\n");
-        printf("can i print still? printf\n");
-        fputs("can i print still? fputs\n", stdout);
+        char str[] = "anyone there?";
+        fprintf(stdout, "sending message\n");
+        fflush(stdout);
+        write (FDWRITE, (const void *) str, (size_t) strlen (str) + 1);
 
         if (execvp(command[0], command) < 0) {
             fprintf(stderr, "%s\n", strerror(errno));
@@ -128,6 +131,17 @@ id_t Execute(char * command[], int procNum, int nextNum)
             perror("\nCommand failed to execute\n");
             exit(1);
         }*/
+        char str[128];
+        printf("waiting for message\n");
+        int num = read (FDREAD, (void *) str, (size_t)  sizeof (str));
+        if (num > 128) {
+            perror ("pipe read error\n");
+            exit(1);
+        }
+        printf("received: %s\n", str);
+        int child = wait(&status);
+        if(child < 0) perror("child failed");
+
         return pid;
     }
 }
