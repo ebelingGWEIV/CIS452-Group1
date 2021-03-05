@@ -114,11 +114,6 @@ id_t Execute(char * command[], int procNum, int nextNum)
         close(fd[procNum][READ]);
         close(fd[nextNum][WRITE]);
 
-        char str[] = "anyone there?";
-        fprintf(stdout, "sending message\n");
-        fflush(stdout);
-        write (FDWRITE, (const void *) str, (size_t) strlen (str) + 1);
-
         if (execvp(command[0], command) < 0) {
             fprintf(stderr, "%s\n", strerror(errno));
             exit(1);
@@ -138,7 +133,12 @@ id_t Execute(char * command[], int procNum, int nextNum)
             perror ("pipe read error\n");
             exit(1);
         }
-        printf("received: %s\n", str);
+        printf("parent received received: %s\n", str);
+
+        char newstr[128] = "i am here";
+
+        write (FDWRITE, (const void *) newstr, (size_t) strlen (newstr) + 1);
+
         int child = wait(&status);
         if(child < 0) perror("child failed");
 
