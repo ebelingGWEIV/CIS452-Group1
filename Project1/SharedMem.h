@@ -11,19 +11,32 @@ struct tracker{
 };
 
 /**
+ * Fills the shared memory with '\0'
+ * @param shmPtr pointer to memory location
+ * @param length number of char to clear
+ */
+void clearMem(const long int *shmPtr, int length) {
+    int i;
+    for(i = 0; i < length; i++) {
+        *(((char *)shmPtr)+i) = 0;
+    }
+}
+
+/**
  * Initialize shared memory
  * @param shmId memoryID
  * @param shmPtr Pointer for shared memory
  */
-void OpenSharedMem(long **shmPtr, int *shmId, size_t size) {
-    if (((*shmId) = shmget (IPC_PRIVATE, size, IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
-        perror ("i can't get no..\n");
+void InitSharedMem(long int **shmPtr, int *shmId, size_t size, key_t memKey) {//Get the shared memory pointer to the
+    if (((*shmId) = shmget (memKey, size, IPC_CREAT | S_IRUSR | S_IWUSR)) < 0) {
+        perror ("I can't get no..\n");
         exit (1);
     }
     if (((*shmPtr) = shmat ((*shmId), 0, 0)) == (void*) -1) {
         perror ("can't attach\n");
         exit (1);
     }
+    clearMem((*shmPtr), size);
 }
 
 /**
@@ -31,7 +44,7 @@ void OpenSharedMem(long **shmPtr, int *shmId, size_t size) {
  * @param shmPtr pointer to shared memory
  * @param shmId id given by shmget
  */
-void CloseSharedMem(const long *shmPtr, int shmId) {
+void CloseSharedMem(char *shmPtr, int shmId) {
     if (shmdt (shmPtr) < 0) {
         perror ("just can't let go\n");
         exit (1);
