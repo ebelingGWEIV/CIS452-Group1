@@ -5,4 +5,4 @@ set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 
-add_executable(CIS452_Group1 proAssign.c)
+add_executable(CIS452_Group1 proAssign.c ../Lab7/semCounter.c)

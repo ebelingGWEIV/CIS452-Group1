@@ -3,5 +3,5 @@ project(Lab7 C)
 
 set(CMAKE_C_STANDARD 11)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-add_executable(Lab7 semCounter.c)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -lrt")
+add_executable(Lab7 getSysInfo.c)
