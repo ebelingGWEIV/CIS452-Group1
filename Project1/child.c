@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 
     printf("my vID: %d\nmy pid: %d\nreceiver ID: %d\nparent id: %d", myID, getpid(), receiverID, getppid());
 
-
     char str[] = "anyone there?";
     printf("sending message\n");
     fflush(stdout);

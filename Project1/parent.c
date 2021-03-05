@@ -58,39 +58,42 @@ int main(int argc, char *argv[])
 
 void StartChildren(int numProc)
 {
+    //Link up the pipes. Parent will always write to #1 and be writen to by numProc
     dup2(fd[0][READ], FDREAD); //Read on yours
     dup2(fd[1][WRITE], FDWRITE); //Write on the next
     close(fd[0][READ]);
     close(fd[1][WRITE]);
 
-
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
-            char *args[256];            // Array of pointers for each argument
-            char childVirtualID[20];
-            char receiverID[20];
-            int nextProc = ((index + 1) < numProc ? index + 1 : 0 );
+        //This is all to make sure we can send the correct arguments to the child
+        //=========================================================================
+        char *args[256];            // Array of pointers for each argument
+        char childVirtualID[20];
+        char receiverID[20];
+        int nextProc = ((index + 1) < numProc ? index + 1 : 0 );
 
-            sprintf(childVirtualID, "%d", index);
-            //If the current process will be the last one, then make its receiver the original process
-            sprintf(receiverID, "%d", nextProc);
+        sprintf(childVirtualID, "%d", index);
+        //If the current process will be the last one, then make its receiver the original process
+        sprintf(receiverID, "%d", nextProc);
 
-            char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
-            //char file[] = "./child.out";
+        char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
+        //char file[] = "./child.out";
 
-            args[0] = file;
-            args[1] = childVirtualID; //myID
-            args[2] = receiverID; //nextID
-            args[3] = NULL;
-
-            if( access( file, F_OK ) == 0 ) {
-                childID[index] = Execute(args, index, nextProc);
-            } else {
-                // file doesn't exist
-                printf("%s could not be found\n", file);
-                fflush(stdout);
-                exit(1);
-            }
+        args[0] = file;
+        args[1] = childVirtualID; //myID
+        args[2] = receiverID; //nextID
+        args[3] = NULL;
+        //=========================================================================
+        //Run the child
+        if( access( file, F_OK ) == 0 ) {
+            childID[index] = Execute(args, index, nextProc);
+        } else {
+            // file doesn't exist
+            printf("%s could not be found\n", file);
+            fflush(stdout);
+            exit(1);
+        }
     }
 }
 
@@ -109,6 +112,7 @@ id_t Execute(char * command[], int procNum, int nextNum)
         exit(1);
     }
     else if (pid == 0) {
+        //Link up the pipes
         dup2(fd[procNum][READ], FDREAD); //Read on yours
         dup2(fd[nextNum][WRITE], FDWRITE); //Write on the next
         close(fd[procNum][READ]);
@@ -120,12 +124,8 @@ id_t Execute(char * command[], int procNum, int nextNum)
         }
     }
     else {
-/*        child = wait(&status);
-
-        if(status > 0) {
-            perror("\nCommand failed to execute\n");
-            exit(1);
-        }*/
+        //This is all for testing the pipes
+        //=========================================================================
         char str[128];
         printf("waiting for message\n");
         int num = read (FDREAD, (void *) str, (size_t)  sizeof (str));
@@ -138,7 +138,7 @@ id_t Execute(char * command[], int procNum, int nextNum)
         char newstr[128] = "i am here";
 
         write (FDWRITE, (const void *) newstr, (size_t) strlen (newstr) + 1);
-
+        //=========================================================================
         int child = wait(&status);
         if(child < 0) perror("child failed");
 
