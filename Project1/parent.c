@@ -9,6 +9,8 @@
 
 void Execute(char * command[]);
 
+void StartChildren(int numProc);
+
 int main(int argc, char *argv[])
 {
     int numProc;
@@ -21,22 +23,32 @@ int main(int argc, char *argv[])
         printf("Expected an argument for the number of processes to use\n");
         return 1;
     }
+    if(numProc <= 1) {
+        printf("Number of processes must be more than 1\n");
+        return 1;
+    }
+    StartChildren(numProc);
+}
 
-    //CLion needs a full path
-    char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";                 // Pointer to the file name
-    //char file[] = "./child.out
+void StartChildren(int numProc) {//CLion needs a full path               // Pointer to the file name
 
     //Fork to create all of the processes, attach pipes to each process
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
             char *args[256];            // Array of pointers for each argument
             char childVirtualID[20];
+            char receiverID[20];
 
             sprintf(childVirtualID, "%d", index);
+            sprintf(receiverID, "%d", ((index + 1) < numProc ? index + 1 : 0 )); //If the current process will be the
+            // last one, then make its receiver the original process
+
+            char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
+            //char file[] = "./child.out";
 
             args[0] = file;
-            args[1] = "2";
-            args[2] = "3";
+            args[1] = childVirtualID; //myID
+            args[2] = receiverID; //nextID
             args[3] = NULL;
 
             if( access( file, F_OK ) == 0 ) {
@@ -48,7 +60,6 @@ int main(int argc, char *argv[])
                 exit(1);
             }
     }
-    fflush(stdout);
 }
 
 
