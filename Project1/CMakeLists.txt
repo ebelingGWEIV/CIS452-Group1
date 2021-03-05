@@ -15,4 +15,4 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 #)
 
 
-add_executable(Project1 main.c ProcessNode.h SharedMem.h SigHandler.h Semaphore.h)
+add_executable(Project1 ProcessNode.h SharedMem.h SigHandler.h Semaphore.h parent.c)

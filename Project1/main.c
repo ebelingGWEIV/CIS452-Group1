@@ -9,11 +9,13 @@
 #define WRITE 1
 #define MAX 1024
 
-#define SHMSIZE 128
+#define SHMSIZE 512
 
 
+struct tracker *CreateTracker(int numProc, struct tracker *pidTracker);
+struct tracker *GetTracker(struct tracker *pidTracker);
 int CheckRunningProcesses(struct tracker *pidTracker);
-void SetupProcesses(struct tracker *pidTracker);
+void SetupProcesses(struct tracker* pidTracker);
 
 //Expect the user to enter the number of processes as a command line argument
 int main(int argc, char * argv[])
@@ -31,31 +33,25 @@ int main(int argc, char * argv[])
     // Create a place to store PIDs of all the processes created
     pid_t procIDs[numProc];
     procIDs[0] = getpid(); //Add original process ID
+    key_t memKey = ftok("Group4Project1", 1);
     long int *shmPtr;
     int shmId;
-    OpenSharedMem(&shmPtr, &shmId, SHMSIZE);
+    InitSharedMem(&shmPtr, &shmId, SHMSIZE, memKey);
+    clearMem(shmPtr, SHMSIZE);
     struct tracker *pidTracker = (struct  tracker *) shmPtr;
     pidTracker->numProc = numProc;
     pidTracker->processes = procIDs;
 
-    // Setup semaphores to protect the shared memory
-    if(Open1Semaphore() != 0)
-    {
-        CloseSemaphores();
-        return 1;
-    }
-
     SetupProcesses(pidTracker);
 
-//    while (CheckRunningProcesses(pidTracker) > 1); //Wait until all other processes are closed
+    puts("waiting");
+    while (CheckRunningProcesses(pidTracker) > 1); //Wait until all other processes are closed
 
     //Shutdown only needs to happen with the parent process
     if(getppid() == pidTracker->processes[0]) {
-        puts("parent is closing up shop\n");
-        CloseSemaphores();
+        puts("quitting\n");
         CloseSharedMem(shmPtr, shmId);
     }
-    puts("quitting\n");
     return 0;
 }
 
@@ -69,7 +65,7 @@ int CheckRunningProcesses(struct tracker *pidTracker)
     int procRunning = 0;
     for(int index = 0; index < pidTracker->numProc; index++)
     {
-        procRunning += (pidTracker->processes[index] > 0 ? 1 : 0);
+        procRunning += (pidTracker->processes[index] == -1 ? 0 : 1);
     }
     return procRunning;
 }
@@ -93,25 +89,18 @@ void SetupProcesses(struct tracker *pidTracker)
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
         pid_t child = fork();
-        sem_wait(mySemaphore1);
-        pidTracker->processes[index] = child;
-        sem_post(mySemaphore1);
-//        dup2(fd[index][READ], STDIN_FILENO);
-//        dup2(fd[index][WRITE], STDOUT_FILENO);
-        // Close the fd
-        close(fd[index][READ]);
-        close(fd[index][WRITE]);
+
         pid_t myPID = getpid();
         //Do something different with the child processes
-        printf("my PID %d tracker PID %d\n", myPID, pidTracker->processes[index]);
-        if(child != 0)
+        if(child == 0)
         {
             printf("Child process %d doing something different\n", myPID);
-            sem_wait(mySemaphore1);
-            pidTracker->processes[index] = 0;
+            pidTracker->processes[index] = -1;
             pause(); // Basically killing the process, there are probably better ways
         }
         else{
+            printf("child spot %d\n", pidTracker->processes[index]);
+            pidTracker->processes[index] = child;
             printf("my PID %d\n", myPID);
         }
     }
