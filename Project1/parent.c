@@ -60,48 +60,49 @@ int main(int argc, char *argv[])
     free(childID);
 }
 
-void StartChildren(int numProc)
-{
-    for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
+void StartChildren(int numProc) {
+    for (int index = 1; index <= numProc; index++) //Start at index == 1 because we already have the parent process
     {
-        //Setup the correct arguments to the child
-        //=========================================================================
-        char *args[256];            // Array of pointers for each argument
-        char childVirtualID[20];
-        char receiverID[20];
-        int nextProc = ((index + 1) < numProc ? index + 1 : 0 );
+        if (index == 1) //Setup the parent
+        {
+            //Link up the pipes. Parent will always write to #1 and be writen to by numProc
+            dup2(fd[index][READ], FDREAD); //Read on yours
+            dup2(fd[index+1][WRITE], FDWRITE); //Write on the next
+            close(fd[index][READ]);
+            close(fd[index+1][WRITE]);
+        }
+        else {
 
-        sprintf(childVirtualID, "%d", index);
-        //If the current process will be the last one, then make its receiver the original process
-        sprintf(receiverID, "%d", nextProc);
+            //Setup the correct arguments to the child
+            //=========================================================================
+            char *args[256];            // Array of pointers for each argument
+            char childVirtualID[20];
+            char receiverID[20];
+            int nextProc = ((index + 1) <= numProc ? index + 1 : 1);
 
-        char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
-        //char file[] = "./child.out";
+            sprintf(childVirtualID, "%d", index);
+            //If the current process will be the last one, then make its receiver the original process
+            sprintf(receiverID, "%d", nextProc);
 
-        args[0] = file;
-        args[1] = childVirtualID; //myID
-        args[2] = receiverID; //nextID
-        args[3] = NULL;
-        //=========================================================================
-        //Run the child
-        if( access( file, F_OK ) == 0 ) {
-            childID[index] = StartChild(args, index, nextProc);
-        } else {
-            // file doesn't exist
-            printf("%s could not be found\n", file);
-            fflush(stdout);
-            exit(1);
+            char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
+            //char file[] = "./child.out";
+
+            args[0] = file;
+            args[1] = childVirtualID; //myID
+            args[2] = receiverID; //nextID
+            args[3] = NULL;
+            //=========================================================================
+            //Run the child
+            if (access(file, F_OK) == 0) {
+                childID[index] = StartChild(args, index, nextProc);
+            } else {
+                // file doesn't exist
+                printf("%s could not be found\n", file);
+                fflush(stdout);
+                exit(1);
+            }
         }
     }
-    //Link up the pipes. Parent will always write to #1 and be writen to by numProc
-    close(FDREAD);
-    close(FDWRITE);
-    dup2(fd[0][READ], FDREAD); //Read on yours
-    dup2(fd[1][WRITE], FDWRITE); //Write on the next
-    close(fd[0][READ]);
-    close(fd[1][WRITE]);
-    close(3);
-    close(4);
 }
 
 /***
@@ -123,8 +124,6 @@ id_t StartChild(char **command, int procNum, int nextNum)
         dup2(fd[nextNum][WRITE], FDWRITE); //Write on the next
         close(fd[procNum][READ]);
         close(fd[nextNum][WRITE]);
-        close(3);
-        close(4);
 
         if (execvp(command[0], command) < 0) {
             fprintf(stderr, "%s\n", strerror(errno));
@@ -148,33 +147,35 @@ void RunMessenger(int numProc)
         fflush(stdout);
         fgets(message, maxLength, stdin);
 
-        printf("Enter the destination (1-%d): ", numProc-1);
+        printf("Enter the destination (1-%d): ", numProc);
         fflush(stdout);
         scanf("%d", &dest);
+        printf("Number recevied %ld\n", dest);
 
-        struct token newTok;
-        strcpy(newTok.message, message);
-        newTok.dest = dest;
-        int myID = 0;
+        struct token myTok;
+        struct token *newTok = &myTok;
 
-        write(FDWRITE, (const void *) &newTok, sizeof(struct token));
+        strcpy(newTok->message, message);
+        newTok->dest = dest;
+        int myID = 1;
+
+        write(FDWRITE, (const void *) newTok, sizeof(struct token));
 
         do {
-            int num = read(FDREAD, (void *) &newTok, (size_t) sizeof(newTok));
+            int num = read(FDREAD, (void *) newTok, (size_t) sizeof(newTok));
             if(num > 0) {
-                if (newTok.dest == myID) {
-                    newTok.dest = 0;
-                    strcpy(newTok.message, "\0");
-                    printf("Child %d received message: %s\n", myID, newTok.message);
-                } else if (newTok.dest == -1) {
+                if (newTok->dest == myID) {
+                    newTok->dest = 1;
+                    strcpy(newTok->message, "\0");
+                    printf("Child %d received message: %s\n", myID, newTok->message);
+                } else if (newTok->dest == -1) {
                     printf("Child %d is signing off\n", myID);
                 } else {
-                    printf("Child %d received token meant for %d\n", myID, newTok.dest);
+                    printf("Child %d received token meant for %d\n", myID, newTok->dest);
                 }
-                Send(&newTok, numProc - 1);
+                Send(newTok, numProc - 1);
             }
-        } while (newTok.dest != myID);
-
+        } while (newTok->dest != myID);
     }
     // Handle cleanup for termination termination
 }

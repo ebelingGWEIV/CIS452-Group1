@@ -29,23 +29,24 @@ int main(int argc, char *argv[])
         printf("Expected arguments for virtual IDs\n");
         return 1;
     }
-    struct token newTok;
+    struct token myTok;
+    struct token *newTok = &myTok;
 
     do{
-        int num = read (FDREAD, (void *) &newTok, (size_t)  sizeof (struct token));
+        int num = read (FDREAD, (void *) newTok, (size_t)  sizeof (struct token));
         if(num > 0) {
-            if (newTok.dest == myID) {
-                newTok.dest = 0;
-                printf("Child %d received message: %s\n", myID, newTok.message);
-            } else if (newTok.dest == -1) {
+            if (newTok->dest == myID) {
+                newTok->dest = 1;
+                printf("Child %d received message: %s\n", myID, newTok->message);
+            } else if (newTok->dest == -1) {
                 printf("Child %d is signing off\n", myID);
             } else {
-                printf("Child %d received token meant for %d\n", myID, newTok.dest);
+                printf("Child %d received token meant for %d\n", myID, newTok->dest);
             }
-            Send(&newTok, receiverID);
+            Send(newTok, receiverID);
         }
 
-    }while(newTok.dest != -1);
+    }while(newTok->dest != -1);
 
 
 //    printf("my vID: %d\nmy pid: %d\nreceiver ID: %d\nparent id: %d\n", myID, getpid(), receiverID, getppid());
