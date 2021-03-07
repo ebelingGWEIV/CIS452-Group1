@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "SigHandler.h"
+#include "Token.h"
 
 #define READ 0
 #define WRITE 1
@@ -13,10 +15,11 @@
 #define FDWRITE 6
 #define FDREAD 5
 
-id_t Execute(char * command[], int procNum, int nextNum);
+id_t StartChild(char **command, int procNum, int nextNum);
 
 void StartChildren(int numProc);
-
+void RunMessenger(int numProc);
+void Send(struct token *tok, int dest);
 id_t *childID;
 
 
@@ -53,20 +56,15 @@ int main(int argc, char *argv[])
 
     InitPipes(numProc);
     StartChildren(numProc);
+    RunMessenger(numProc);
     free(childID);
 }
 
 void StartChildren(int numProc)
 {
-    //Link up the pipes. Parent will always write to #1 and be writen to by numProc
-    dup2(fd[0][READ], FDREAD); //Read on yours
-    dup2(fd[numProc-1][WRITE], FDWRITE); //Write on the next
-    close(fd[0][READ]);
-    close(fd[numProc-1][WRITE]);
-
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
-        //This is all to make sure we can send the correct arguments to the child
+        //Setup the correct arguments to the child
         //=========================================================================
         char *args[256];            // Array of pointers for each argument
         char childVirtualID[20];
@@ -87,7 +85,7 @@ void StartChildren(int numProc)
         //=========================================================================
         //Run the child
         if( access( file, F_OK ) == 0 ) {
-            childID[index] = Execute(args, index, nextProc);
+            childID[index] = StartChild(args, index, nextProc);
         } else {
             // file doesn't exist
             printf("%s could not be found\n", file);
@@ -95,20 +93,28 @@ void StartChildren(int numProc)
             exit(1);
         }
     }
+    //Link up the pipes. Parent will always write to #1 and be writen to by numProc
+    close(FDREAD);
+    close(FDWRITE);
+    dup2(fd[0][READ], FDREAD); //Read on yours
+    dup2(fd[1][WRITE], FDWRITE); //Write on the next
+    close(fd[0][READ]);
+    close(fd[1][WRITE]);
+    close(3);
+    close(4);
 }
-
 
 /***
  * Creates a child that runs the command using execvp.
  * @param command The parsed command
  */
-id_t Execute(char * command[], int procNum, int nextNum)
+id_t StartChild(char **command, int procNum, int nextNum)
 {
     id_t pid;
     int status = 0;
 
     if ((pid = fork()) < 0) {
-        perror("fork failure"); //This error seems big enough that exiting is okay
+        perror("fork failure");
         exit(1);
     }
     else if (pid == 0) {
@@ -117,6 +123,8 @@ id_t Execute(char * command[], int procNum, int nextNum)
         dup2(fd[nextNum][WRITE], FDWRITE); //Write on the next
         close(fd[procNum][READ]);
         close(fd[nextNum][WRITE]);
+        close(3);
+        close(4);
 
         if (execvp(command[0], command) < 0) {
             fprintf(stderr, "%s\n", strerror(errno));
@@ -124,25 +132,55 @@ id_t Execute(char * command[], int procNum, int nextNum)
         }
     }
     else {
-        //This is all for testing the pipes
-        //=========================================================================
-        if(nextNum == 0) {
-            char str[128];
-            printf("parent waiting for message\n");
-            int num = read(FDREAD, (void *) str, (size_t) sizeof(str));
-            if (num > 128) {
-                perror("pipe read error\n");
-                exit(1);
-            }
-            printf("parent received received: %s\n", str);
-        }
-        if(procNum == 1) {
-            char newstr[128] = "parent is here\n";
-
-            write(FDWRITE, (const void *) newstr, (size_t) strlen(newstr));
-        }
-        //=========================================================================
-
         return pid;
     }
+}
+
+void RunMessenger(int numProc)
+{   
+    const int maxLength = 128;
+    char message[maxLength];
+    int dest;
+
+    while(CheckTermination(0) != 1)
+    {
+        printf("Enter a message: ");
+        fflush(stdout);
+        fgets(message, maxLength, stdin);
+
+        printf("Enter the destination (1-%d): ", numProc-1);
+        fflush(stdout);
+        scanf("%d", &dest);
+
+        struct token newTok;
+        strcpy(newTok.message, message);
+        newTok.dest = dest;
+        int myID = 0;
+
+        write(FDWRITE, (const void *) &newTok, sizeof(struct token));
+
+        do {
+            int num = read(FDREAD, (void *) &newTok, (size_t) sizeof(newTok));
+            if(num > 0) {
+                if (newTok.dest == myID) {
+                    newTok.dest = 0;
+                    strcpy(newTok.message, "\0");
+                    printf("Child %d received message: %s\n", myID, newTok.message);
+                } else if (newTok.dest == -1) {
+                    printf("Child %d is signing off\n", myID);
+                } else {
+                    printf("Child %d received token meant for %d\n", myID, newTok.dest);
+                }
+                Send(&newTok, numProc - 1);
+            }
+        } while (newTok.dest != myID);
+
+    }
+    // Handle cleanup for termination termination
+}
+
+void Send(struct token *tok, int dest)
+{
+    printf("Passing token to %d\n", dest);
+    write (FDWRITE, (const void *) tok, sizeof(struct token));
 }

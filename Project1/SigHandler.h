@@ -3,6 +3,9 @@
 
 #include <signal.h>
 
+int CheckTermination(int term);
+void MarkForTermination(int signum);
+
 void OverrideSIGNINT()
 {
     signal(SIGINT, MarkForTermination);  //Register the signal handler
