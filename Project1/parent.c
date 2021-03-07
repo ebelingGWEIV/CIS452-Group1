@@ -15,7 +15,7 @@
 #define FDWRITE 6
 #define FDREAD 5
 
-id_t StartChild(char **command, int procNum, int nextNum);
+id_t StartChild(char **command, int numProc, int procNum, int nextNum);
 
 void StartChildren(int numProc);
 void RunMessenger(int numProc);
@@ -94,7 +94,7 @@ void StartChildren(int numProc) {
             //=========================================================================
             //Run the child
             if (access(file, F_OK) == 0) {
-                childID[index] = StartChild(args, index, nextProc);
+                childID[index] = StartChild(args,numProc, index, nextProc);
             } else {
                 // file doesn't exist
                 printf("%s could not be found\n", file);
@@ -109,7 +109,7 @@ void StartChildren(int numProc) {
  * Creates a child that runs the command using execvp.
  * @param command The parsed command
  */
-id_t StartChild(char **command, int procNum, int nextNum)
+id_t StartChild(char **command, int numProc, int procNum, int nextNum)
 {
     id_t pid;
     int status = 0;
@@ -150,7 +150,6 @@ void RunMessenger(int numProc)
         printf("Enter the destination (1-%d): ", numProc);
         fflush(stdout);
         scanf("%d", &dest);
-        printf("Number recevied %ld\n", dest);
 
         struct token myTok;
         struct token *newTok = &myTok;
@@ -158,8 +157,9 @@ void RunMessenger(int numProc)
         strcpy(newTok->message, message);
         newTok->dest = dest;
         int myID = 1;
+        int destID = 2;
 
-        write(FDWRITE, (const void *) newTok, sizeof(struct token));
+        Send(newTok, destID);
 
         do {
             int num = read(FDREAD, (void *) newTok, (size_t) sizeof(newTok));
@@ -173,7 +173,7 @@ void RunMessenger(int numProc)
                 } else {
                     printf("Child %d received token meant for %d\n", myID, newTok->dest);
                 }
-                Send(newTok, numProc - 1);
+                Send(newTok, destID);
             }
         } while (newTok->dest != myID);
     }
@@ -183,5 +183,6 @@ void RunMessenger(int numProc)
 void Send(struct token *tok, int dest)
 {
     printf("Passing token to %d\n", dest);
+    fflush(stdout);
     write (FDWRITE, (const void *) tok, sizeof(struct token));
 }

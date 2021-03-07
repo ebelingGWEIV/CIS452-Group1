@@ -37,12 +37,13 @@ int main(int argc, char *argv[])
         if(num > 0) {
             if (newTok->dest == myID) {
                 newTok->dest = 1;
-                printf("Child %d received message: %s\n", myID, newTok->message);
+                printf("Child %d received message: '%s'", myID, newTok->message);
             } else if (newTok->dest == -1) {
                 printf("Child %d is signing off\n", myID);
             } else {
                 printf("Child %d received token meant for %d\n", myID, newTok->dest);
             }
+            sleep(1); //Adding some delay to make it more readable for the user
             Send(newTok, receiverID);
         }
 
@@ -67,6 +68,10 @@ int main(int argc, char *argv[])
 
 void Send(struct token *tok, int dest)
 {
+    printf("=======================\n");
+    printf("message '%s'", tok->message);
+    printf("dest %d\n", tok->dest);
     printf("Passing token to %d\n", dest);
+    fflush(stdout);
     write (FDWRITE, (const void *) tok, sizeof(struct token));
 }
