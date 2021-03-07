@@ -28,16 +28,18 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printf("my vID: %d\nmy pid: %d\nreceiver ID: %d\nparent id: %d", myID, getpid(), receiverID, getppid());
+    printf("my vID: %d\nmy pid: %d\nreceiver ID: %d\nparent id: %d\n", myID, getpid(), receiverID, getppid());
 
-    char str[] = "anyone there?";
-    printf("sending message\n");
+    char str[] = "anyone there? - child";
+    printf("child sending message\n");
     fflush(stdout);
-    write (FDWRITE, (const void *) str, (size_t) strlen (str) + 1);
-    printf("now i'm waiting\n");
+    write (FDWRITE, (const void *) str, (size_t) strlen (str));
+    printf("now child is waiting\n");
     int num = read (FDREAD, (void *) str, (size_t)  sizeof (str));
-    printf("child received the message %s", str);
+    printf("child received the message %s\n", str);
+    printf("goodbye - child\n");
     fflush(stdout);
+
     return(0);
 
 }

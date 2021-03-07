@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
         printf("Expected an argument for the number of processes to use\n");
         exit(1);
     }
-    if(numProc <= 1) {
-        printf("Number of processes must be more than 1\n");
+    if(numProc <= 2) {
+        printf("Number of processes must be more than 2\n");
         exit(1);
     }
     childID = malloc((numProc+1) * sizeof(id_t));
@@ -60,9 +60,9 @@ void StartChildren(int numProc)
 {
     //Link up the pipes. Parent will always write to #1 and be writen to by numProc
     dup2(fd[0][READ], FDREAD); //Read on yours
-    dup2(fd[1][WRITE], FDWRITE); //Write on the next
+    dup2(fd[numProc-1][WRITE], FDWRITE); //Write on the next
     close(fd[0][READ]);
-    close(fd[1][WRITE]);
+    close(fd[numProc-1][WRITE]);
 
     for(int index = 1; index < numProc; index++) //Start at index == 1 because we already have the parent process
     {
@@ -126,21 +126,22 @@ id_t Execute(char * command[], int procNum, int nextNum)
     else {
         //This is all for testing the pipes
         //=========================================================================
-        char str[128];
-        printf("waiting for message\n");
-        int num = read (FDREAD, (void *) str, (size_t)  sizeof (str));
-        if (num > 128) {
-            perror ("pipe read error\n");
-            exit(1);
+        if(nextNum == 0) {
+            char str[128];
+            printf("parent waiting for message\n");
+            int num = read(FDREAD, (void *) str, (size_t) sizeof(str));
+            if (num > 128) {
+                perror("pipe read error\n");
+                exit(1);
+            }
+            printf("parent received received: %s\n", str);
         }
-        printf("parent received received: %s\n", str);
+        if(procNum == 1) {
+            char newstr[128] = "parent is here\n";
 
-        char newstr[128] = "i am here";
-
-        write (FDWRITE, (const void *) newstr, (size_t) strlen (newstr) + 1);
+            write(FDWRITE, (const void *) newstr, (size_t) strlen(newstr));
+        }
         //=========================================================================
-        int child = wait(&status);
-        if(child < 0) perror("child failed");
 
         return pid;
     }
