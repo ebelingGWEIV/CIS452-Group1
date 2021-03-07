@@ -44,10 +44,6 @@ int main(int argc, char *argv[])
             }
             Send(&newTok, receiverID);
         }
-        else
-        {
-            printf("%d child got a blank message\n", myID);
-        }
 
     }while(newTok.dest != -1);
 
