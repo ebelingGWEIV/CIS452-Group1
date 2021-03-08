@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     }
     struct token myTok;
     struct token *newTok = &myTok;
-
+    int flag = 1;
     do{
         int num = read (FDREAD, (void *) newTok, (size_t)  sizeof (struct token));
         if(num > 0 && newTok->src == myID-1) {
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
                 printf("Child %d received message: %s\n", myID, newTok->message);
             } else if (newTok->dest == -1) {
                 printf("Child %d is signing off\n", myID);
-                return 0;
+                flag = 0;
             } else {
                 printf("Child %d received token meant for %d\n", myID, newTok->dest);
             }
@@ -49,12 +49,12 @@ int main(int argc, char *argv[])
             Send(newTok, receiverID);
         }
         else if(num < 0){
-            perror("failed to read");
+            perror("failed to read, child quitting");
             newTok->dest = -1;
             Send(newTok, receiverID);
         }
 
-    }while(newTok->dest != -1);
+    }while(newTok->dest != -1 && flag == 1);
 
     return(0);
 
@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 
 void Send(struct token *tok, int dest)
 {
+    printf("Passing token to %d\n", dest);
     fflush(stdout);
     write (FDWRITE, (const void *) tok, sizeof(struct token));
 }

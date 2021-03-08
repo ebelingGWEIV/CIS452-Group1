@@ -2,7 +2,6 @@
 #ifndef LAB6_PROCESSNODE_H
 #define LAB6_PROCESSNODE_H
 
-
 struct token{
     int dest;
     int src;
