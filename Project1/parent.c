@@ -12,21 +12,24 @@
 #define READ 0
 #define WRITE 1
 
-#define FDWRITE 6
-#define FDREAD 5
+#define FDWRITE 4200
+#define FDREAD 4300
 
 id_t StartChild(char **command, int numProc, int procNum, int nextNum);
 
 void StartChildren(int numProc);
 void RunMessenger(int numProc);
 void Send(struct token *tok, int dest);
+
+void ClearString(const int maxLength, char *message);
+
 id_t *childID;
 
 
 int fd[20][2];
 void InitPipes(int numProc)
 {
-    for(int index = 0; index < numProc; index++)
+    for(int index = 1; index <= numProc; index++)
     {
         if (pipe (fd[index]) < 0) {
             perror ("plumbing problem");
@@ -35,6 +38,7 @@ void InitPipes(int numProc)
         }
     }
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -138,46 +142,77 @@ id_t StartChild(char **command, int numProc, int procNum, int nextNum)
 void RunMessenger(int numProc)
 {   
     const int maxLength = 128;
-    char message[maxLength];
-    int dest;
 
     while(CheckTermination(0) != 1)
     {
+
+        char message[maxLength];
+        ClearString(maxLength, message);
+
+        //there is a left over \n
         printf("Enter a message: ");
         fflush(stdout);
-        fgets(message, maxLength, stdin);
+        fflush(stdin);
+        char c;
 
+        while(strlen(message) <= 0)
+            while (( c = getchar()) != '\n' && c != EOF)
+                strncat(message, &c, sizeof(char));
+//        fgets(message, maxLength, stdin);
+
+        int dest;
         printf("Enter the destination (1-%d): ", numProc);
         fflush(stdout);
+        fflush(stdin);
         scanf("%d", &dest);
 
         struct token myTok;
         struct token *newTok = &myTok;
 
-        strcpy(newTok->message, message);
-        newTok->dest = dest;
         int myID = 1;
         int destID = 2;
 
+        strcpy(newTok->message, message);
+        newTok->dest = dest;
+        newTok->src = 1;
+
         Send(newTok, destID);
+        ClearString(maxLength, newTok->message);
 
         do {
-            int num = read(FDREAD, (void *) newTok, (size_t) sizeof(newTok));
-            if(num > 0) {
+            int num = read(FDREAD, (void *) newTok, (size_t) sizeof(newTok)-1);
+            if(num > 0 && newTok->src == numProc) {
                 if (newTok->dest == myID) {
                     newTok->dest = 1;
-                    strcpy(newTok->message, "\0");
-                    printf("Child %d received message: %s\n", myID, newTok->message);
+                    strcpy(newTok->message, "\0\0\0");
+                    strcpy(message, "\0\0\0");
+                    printf("Process %d received message: %s\n", myID, newTok->message);
                 } else if (newTok->dest == -1) {
-                    printf("Child %d is signing off\n", myID);
+                    printf("Process %d is signing off\n", myID);
                 } else {
-                    printf("Child %d received token meant for %d\n", myID, newTok->dest);
+                    printf("Process %d received token meant for %d\n", myID, newTok->dest);
                 }
-                Send(newTok, destID);
             }
+            else if(num < 0)
+            {
+                perror("failed to read");
+                CheckTermination(1);
+            }
+            else if(num == 0)
+            {
+                strcpy(newTok->message, "\0\0\0");
+            }
+//            sleep(1); //Adding some delay to make it more readable for the user
         } while (newTok->dest != myID);
     }
     // Handle cleanup for termination termination
+}
+
+void ClearString(const int maxLength, char *message) {//reset the string
+    for(int i = 0; i  < maxLength; i++)
+    {
+        message[i] = '\0';
+    }
 }
 
 void Send(struct token *tok, int dest)

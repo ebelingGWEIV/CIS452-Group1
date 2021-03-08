@@ -8,8 +8,8 @@
 #define READ 0
 #define WRITE 1
 
-#define FDWRITE 6
-#define FDREAD 5
+#define FDWRITE 4200
+#define FDREAD 4300
 
 void Send(struct token *tok, int dest);
 
@@ -34,33 +34,26 @@ int main(int argc, char *argv[])
 
     do{
         int num = read (FDREAD, (void *) newTok, (size_t)  sizeof (struct token));
-        if(num > 0) {
+        if(num > 0 && newTok->src == myID-1) {
             if (newTok->dest == myID) {
                 newTok->dest = 1;
-                printf("Child %d received message: '%s'", myID, newTok->message);
+                printf("Child %d received message: %s\n", myID, newTok->message);
             } else if (newTok->dest == -1) {
                 printf("Child %d is signing off\n", myID);
             } else {
                 printf("Child %d received token meant for %d\n", myID, newTok->dest);
             }
             sleep(1); //Adding some delay to make it more readable for the user
+            newTok->src = myID;
+            Send(newTok, receiverID);
+        }
+        else if(num < 0){
+            perror("failed to read");
+            newTok->dest = -1;
             Send(newTok, receiverID);
         }
 
     }while(newTok->dest != -1);
-
-
-//    printf("my vID: %d\nmy pid: %d\nreceiver ID: %d\nparent id: %d\n", myID, getpid(), receiverID, getppid());
-//
-//    char str[] = "anyone there? - child";
-//    printf("child sending message\n");
-//    fflush(stdout);
-//    write (FDWRITE, (const void *) str, (size_t) strlen (str));
-//    printf("now child is waiting\n");
-//    int num = read (FDREAD, (void *) str, (size_t)  sizeof (str));
-//    printf("child received the message %s\n", str);
-//    printf("goodbye - child\n");
-//    fflush(stdout);
 
     return(0);
 
@@ -68,10 +61,6 @@ int main(int argc, char *argv[])
 
 void Send(struct token *tok, int dest)
 {
-    printf("=======================\n");
-    printf("message '%s'", tok->message);
-    printf("dest %d\n", tok->dest);
-    printf("Passing token to %d\n", dest);
     fflush(stdout);
     write (FDWRITE, (const void *) tok, sizeof(struct token));
 }
