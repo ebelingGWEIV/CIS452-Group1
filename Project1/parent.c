@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/resource.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,20 +16,17 @@
 #define FDREAD 43
 
 id_t StartChild(char **command, int procNum, int nextNum);
-
 void StartChildren(int numProc);
-
 void RunMessenger(int numProc);
-
 void Send(struct token *tok, int dest);
-
 void ClearString(const int maxLength, char *message);
-
-
-int fd[20][2];
-
 struct token *GetUserMessage(int numProc, const int maxLength);
 
+int fd[20][2];
+/**
+ * Initialize all the pipes that will be used.
+ * @param numProc The number of pipes to init
+ */
 void InitPipes(int numProc) {
     for (int index = 1; index <= numProc; index++) {
         if (pipe(fd[index]) < 0) {
@@ -45,7 +41,6 @@ void InitPipes(int numProc) {
 int main(int argc, char *argv[]) {
     OverrideSIGNINT();
 
-    printf("starting\n");
     int numProc;
     if (argc == 2) {
         numProc = atoi(argv[1]);
@@ -53,16 +48,21 @@ int main(int argc, char *argv[]) {
         printf("Expected an argument for the number of processes to use\n");
         exit(1);
     }
-    if (numProc <= 2) {
-        printf("Number of processes must be more than 2\n");
+    if (numProc <= 2 || numProc > 20) {
+        printf("Number of processes must be more than 2 and less than 20\n");
         exit(1);
     }
+    printf("Starting %d children\n", numProc);
 
     InitPipes(numProc);
     StartChildren(numProc);
     RunMessenger(numProc);
 }
 
+/**
+ * Dup2 the pipes and start all the children processes.
+ * @param numProc NUmber of children to start
+ */
 void StartChildren(int numProc) {
     for (int index = 1; index <= numProc; index++) //Start at index == 1 because we already have the parent process
     {
@@ -110,6 +110,8 @@ void StartChildren(int numProc) {
 /***
  * Creates a child that runs the command using execvp.
  * @param command The parsed command
+ * @param procNum The virtual ID of the child
+ * @param nextNum The receiver of this child's messages
  */
 id_t StartChild(char **command, int procNum, int nextNum) {
     id_t pid;
@@ -134,6 +136,10 @@ id_t StartChild(char **command, int procNum, int nextNum) {
     }
 }
 
+/**
+ * Look for input from the user and read from the children.
+ * @param numProc Number of children created.
+ */
 void RunMessenger(int numProc) {
     const int maxLength = 128;
     int myID = 1;
@@ -181,7 +187,7 @@ void RunMessenger(int numProc) {
                     if (newTok->dest == myID) {
                         printf("Parent confirming message was received. Clearing message...\n");
                         printf("Enter a message: \n");
-                        strcpy(newTok->message, "\n\0\0\0\0\0\0\0\0");
+                        ClearString(maxLength, newTok->message);
                         newTok->dest = 0;
                         fflush(stdout);
                         // Got the quit message back, time to quit
@@ -210,19 +216,34 @@ void RunMessenger(int numProc) {
     Send(newTok, destID);
 }
 
+/**
+ * Writes '\0' in a string for maxLength characters
+ * @param maxLength Number of characters to clear
+ * @param message Pointer to the string
+ */
 void ClearString(const int maxLength, char *message) {//reset the string
     for (int i = 0; i < maxLength; i++) {
         message[i] = '\0';
     }
 }
 
+/**
+ * Send a token to a process through an attached pipe on FDWRITE
+ * @param tok The token to send to the process
+ * @param dest The process receiving the token (for printing only)
+ */
 void Send(struct token *tok, int dest) {
     printf("Passing token to %d\n", dest);
     fflush(stdout);
     write(FDWRITE, (const void *) tok, sizeof(struct token));
 }
 
-
+/**
+ * Handle the user input and build a token to send.
+ * @param numProc The number of children created
+ * @param maxLength The maximum length the string from the user can be
+ * @return A pointer to the token created
+ */
 struct token *GetUserMessage(int numProc, const int maxLength) {
     char message[maxLength];
     ClearString(maxLength, message);

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 #include "Token.h"
 
 #define READ 0
@@ -59,6 +58,7 @@ int main(int argc, char *argv[])
     return(0);
 
 }
+
 
 void Send(struct token *tok, int dest)
 {
