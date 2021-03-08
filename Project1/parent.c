@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
         printf("Number of processes must be more than 2 and less than 20\n");
         exit(1);
     }
-    printf("Starting %d children\n", numProc);
+    printf("Starting %d processes (%d children)\n", numProc, numProc-1);
 
     InitPipes(numProc);
     StartChildren(numProc);
@@ -86,8 +86,7 @@ void StartChildren(int numProc) {
             //If the current process will be the last one, then make its receiver the original process
             sprintf(receiverID, "%d", nextProc);
 
-            char file[] = "/home/kenny/CIS452/CIS452-Group1/Project1/child";
-            //char file[] = "./child.out";
+            char file[] = "./child";
 
             args[0] = file;
             args[1] = childVirtualID; //myID
@@ -174,6 +173,9 @@ void RunMessenger(int numProc) {
 
             newTok = GetUserMessage(numProc, maxLength);
 
+            //Check after the blocking call
+            if (CheckTermination(0)) break;
+
             Send(newTok, destID);
         } else {
             int count;
@@ -254,16 +256,23 @@ struct token *GetUserMessage(int numProc, const int maxLength) {
     fflush(stdin);
     char c;
 
+    //Check before entering the blocking call
+    if (CheckTermination(0)) return NULL;
+
     while (strlen(message) <= 0)
         while ((c = getchar()) != '\n' && c != EOF)
             strncat(message, &c, sizeof(char));
-//        fgets(message, maxLength, stdin);
+
 
     int dest;
-    printf("Enter the destination (1-%d): ", numProc);
-    fflush(stdout);
-    fflush(stdin);
-    scanf("%d", &dest);
+    while(dest < 1 || dest > numProc) {
+        //Check before entering the blocking call
+        if (CheckTermination(0)) return NULL;
+        printf("Enter the destination (1-%d): ", numProc);
+        fflush(stdout);
+        fflush(stdin);
+        scanf("%d", &dest);
+    }
 
     struct token myTok;
     struct token *newTok = &myTok;
