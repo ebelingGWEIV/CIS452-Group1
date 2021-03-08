@@ -13,8 +13,8 @@
 #define READ 0
 #define WRITE 1
 
-#define FDWRITE 4200
-#define FDREAD 4300
+#define FDWRITE 42
+#define FDREAD 43
 
 id_t StartChild(char **command, int procNum, int nextNum);
 
@@ -186,8 +186,7 @@ void RunMessenger(int numProc) {
                         fflush(stdout);
                         // Got the quit message back, time to quit
                     } else if (newTok->dest == -1) {
-                        printf("Process %d is signing off\n", myID);
-                        CheckTermination(1);
+                       break;
                     }
                         // Got a message for another process
                     else {
@@ -204,7 +203,11 @@ void RunMessenger(int numProc) {
         if (CheckTermination(0))
             break;
     }
-
+    // Close all other processes
+    printf("Process %d is signing off\n", myID);
+    newTok->dest = -1;
+    newTok->src = myID;
+    Send(newTok, destID);
 }
 
 void ClearString(const int maxLength, char *message) {//reset the string

@@ -16,7 +16,6 @@ int CheckTermination(int term) {
     static int terminate = 0;
     if(term != 0) {
         terminate = 1;
-        printf("term is 1");
     }
     return terminate;
 }

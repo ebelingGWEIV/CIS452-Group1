@@ -8,8 +8,8 @@
 #define READ 0
 #define WRITE 1
 
-#define FDWRITE 4200
-#define FDREAD 4300
+#define FDWRITE 42
+#define FDREAD 43
 
 void Send(struct token *tok, int dest);
 
