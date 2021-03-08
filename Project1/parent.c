@@ -16,17 +16,16 @@
 #define FDREAD 4300
 
 id_t StartChild(char **command, int numProc, int procNum, int nextNum);
-
 void StartChildren(int numProc);
 void RunMessenger(int numProc);
 void Send(struct token *tok, int dest);
-
 void ClearString(const int maxLength, char *message);
-
-id_t *childID;
 
 
 int fd[20][2];
+
+struct token *GetUserMessage(int numProc, const int maxLength);
+
 void InitPipes(int numProc)
 {
     for(int index = 1; index <= numProc; index++)
@@ -42,6 +41,8 @@ void InitPipes(int numProc)
 
 int main(int argc, char *argv[])
 {
+    OverrideSIGNINT();
+
     printf("starting\n");
     int numProc;
     if(argc == 2) {
@@ -56,12 +57,10 @@ int main(int argc, char *argv[])
         printf("Number of processes must be more than 2\n");
         exit(1);
     }
-    childID = malloc((numProc+1) * sizeof(id_t));
 
     InitPipes(numProc);
     StartChildren(numProc);
     RunMessenger(numProc);
-    free(childID);
 }
 
 void StartChildren(int numProc) {
@@ -98,7 +97,7 @@ void StartChildren(int numProc) {
             //=========================================================================
             //Run the child
             if (access(file, F_OK) == 0) {
-                childID[index] = StartChild(args,numProc, index, nextProc);
+                StartChild(args,numProc, index, nextProc);
             } else {
                 // file doesn't exist
                 printf("%s could not be found\n", file);
@@ -142,51 +141,32 @@ id_t StartChild(char **command, int numProc, int procNum, int nextNum)
 void RunMessenger(int numProc)
 {   
     const int maxLength = 128;
+    int myID = 1;
+    int destID = 2;
+    //Things needed for select() to work properly//
+    fd_set readfds;
+    struct timeval tv;
+    int    fd_stdin;
+    fd_stdin = fileno(stdin);
+    FD_ZERO(&readfds);
+    FD_SET(0, &readfds);
+    tv.tv_sec = 30;
+    tv.tv_usec = 0;
+    //                                          //
 
     while(CheckTermination(0) != 1)
     {
-
-        char message[maxLength];
-        ClearString(maxLength, message);
-
-        //there is a left over \n
-        printf("Enter a message: ");
-        fflush(stdout);
-        fflush(stdin);
-        char c;
-
-        while(strlen(message) <= 0)
-            while (( c = getchar()) != '\n' && c != EOF)
-                strncat(message, &c, sizeof(char));
-//        fgets(message, maxLength, stdin);
-
-        int dest;
-        printf("Enter the destination (1-%d): ", numProc);
-        fflush(stdout);
-        fflush(stdin);
-        scanf("%d", &dest);
-
-        struct token myTok;
-        struct token *newTok = &myTok;
-
-        int myID = 1;
-        int destID = 2;
-
-        strcpy(newTok->message, message);
-        newTok->dest = dest;
-        newTok->src = 1;
+        struct token *newTok = GetUserMessage(numProc, maxLength);
 
         Send(newTok, destID);
-        ClearString(maxLength, newTok->message);
 
         do {
             int num = read(FDREAD, (void *) newTok, (size_t) sizeof(newTok)-1);
             if(num > 0 && newTok->src == numProc) {
                 if (newTok->dest == myID) {
-                    newTok->dest = 1;
                     strcpy(newTok->message, "\0\0\0");
-                    strcpy(message, "\0\0\0");
-                    printf("Process %d received message: %s\n", myID, newTok->message);
+                    printf("Parent confirmed message was received. Clearing message...\n");
+                    break;
                 } else if (newTok->dest == -1) {
                     printf("Process %d is signing off\n", myID);
                 } else {
@@ -198,12 +178,11 @@ void RunMessenger(int numProc)
                 perror("failed to read");
                 CheckTermination(1);
             }
-            else if(num == 0)
+            else
             {
                 strcpy(newTok->message, "\0\0\0");
             }
-//            sleep(1); //Adding some delay to make it more readable for the user
-        } while (newTok->dest != myID);
+        } while (newTok->dest != myID && CheckTermination(0) == 0);
     }
     // Handle cleanup for termination termination
 }
@@ -220,4 +199,36 @@ void Send(struct token *tok, int dest)
     printf("Passing token to %d\n", dest);
     fflush(stdout);
     write (FDWRITE, (const void *) tok, sizeof(struct token));
+}
+
+
+struct token *GetUserMessage(int numProc, const int maxLength) {
+    char message[maxLength];
+    ClearString(maxLength, message);
+
+    //there is a left over \n
+    printf("Enter a message: ");
+    fflush(stdout);
+    fflush(stdin);
+    char c;
+
+    while(strlen(message) <= 0)
+        while (( c = getchar()) != '\n' && c != EOF)
+            strncat(message, &c, sizeof(char));
+//        fgets(message, maxLength, stdin);
+
+    int dest;
+    printf("Enter the destination (1-%d): ", numProc);
+    fflush(stdout);
+    fflush(stdin);
+    scanf("%d", &dest);
+
+    struct token myTok;
+    struct token *newTok = &myTok;
+
+
+    strcpy(newTok->message, message);
+    newTok->dest = dest;
+    newTok->src = 1;
+    return newTok;
 }

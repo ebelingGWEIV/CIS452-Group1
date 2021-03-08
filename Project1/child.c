@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
                 printf("Child %d received message: %s\n", myID, newTok->message);
             } else if (newTok->dest == -1) {
                 printf("Child %d is signing off\n", myID);
+                return 0;
             } else {
                 printf("Child %d received token meant for %d\n", myID, newTok->dest);
             }
