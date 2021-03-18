@@ -29,14 +29,14 @@ int main()
 char *GetUserInput(char *str){
 
     size_t size = SIZE;
-    int ch;
+    int newChar;
     size_t len;
 
     str = realloc(NULL, sizeof(char)*size);//size is start size
 
     //Continue looping and reading characters from the console until a newline is found or the end of the input stream.
-    for(len = 0; (EOF!=(ch=getc(stdin)) && ch != '\n'); len++){
-        str[len]=ch;
+    for(len = 0; (EOF!=(newChar=getc(stdin)) && newChar != '\n'); len++){
+        str[len]=newChar;
 
         if(len==size-1) //If the string has filled the array, allocate more memory
         {
