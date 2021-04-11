@@ -1,18 +1,24 @@
-import java.lang.reflect.*;
-import java.util.concurrent.*;
-
 public class TimedProcess {
-    private long MiliToLive;
-    TimedProcess(long millis) {
-        this.MiliToLive = millis;
 
-        // As long as we're multithreaded, I think we can use Thread.sleep(millis) to do the timer part of this.
+    private int TimeToLive;
+    public final int Size;
+    public int ID;
 
-        }
+    TimedProcess(int life, int size) {
+        this.TimeToLive = life;
+        this.Size = size;
+    }
 
-    private void CloseProcess(String name)
-    {
-        System.out.println("Closing the processes (but not really)");
+
+    public int GetTimeToLive() {
+        return TimeToLive;
+    }
+
+    /***
+     * Run this upon a new cycle (1 second). Decreases the TimeToLive by 1.
+     */
+    public void NewCycle() {
+        TimeToLive--;
     }
 
 

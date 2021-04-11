@@ -1,5 +1,3 @@
-/* This is a simple Java program.
-   FileName : "HelloWorld.java". */
 
 class HelloWorld
 {
@@ -9,7 +7,8 @@ class HelloWorld
         System.out.println("Hello, World");
 
         try {
-            var myProc = new TimedProcess(20);
+            var controller = new MemoryController(15);
+            controller.Run();
         }
         catch (Exception ex){
             ex.printStackTrace();
