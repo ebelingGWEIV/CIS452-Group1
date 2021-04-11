@@ -120,12 +120,14 @@ public class MemorySpace {
 
     private boolean AddBestFit(TimedProcess proc)
     {
+        //todo Write this method
         System.out.println("Not implemented\n");
         return false;
     }
 
     private boolean AddWorstFit(TimedProcess proc)
     {
+        //todo Write this method
         System.out.println("Not implemented\n");
         return false;
     }
