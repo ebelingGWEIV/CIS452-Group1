@@ -1,10 +1,8 @@
 import java.lang.Thread;
-import java.lang.management.MemoryManagerMXBean;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class MemoryController {
-    public boolean Run = true;
     public static final int WaitTime = 1000; //mili
 
     private MemorySpace FirstFit;
@@ -39,19 +37,18 @@ public class MemoryController {
 
     public void Run()
     {
-        int head = 0;
         int index;
         for(index = 0; ProcSequence.size() > 0; index++)
         {
             var nextProc = ProcSequence.poll();
             if(nextProc != null)
             {
-//                FirstFit.NextCycle(nextProc);
-//                BestFit.NextCycle(nextProc);
+                FirstFit.NextCycle(nextProc);
+                BestFit.NextCycle(nextProc);
                 WorstFit.NextCycle(nextProc);
 
-//                FirstFit.AddFirstFit();
-//                BestFit.AddBestFit();
+                FirstFit.AddFirstFit();
+                BestFit.AddBestFit();
                 WorstFit.AddWorstFit();
             }
 //            System.out.println("First: " + FirstFit);
