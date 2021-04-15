@@ -21,20 +21,20 @@ public class MemoryController {
         WorstFit = new MemorySpace(maxSpace);
 
         //Build the process sequence
-        Add(3,5);
-        Add(3,4);
-        Add(5,2);
-        Add(3,2);
-        Add(3,4);
-        Add(2,5);
-        Add(4,2);
-        Add(4,4);
+        Add(3,2, 0);
+        Add(3,4, 1);
+        Add(5,3, 2);
+        Add(3,3, 3);
+        Add(3,2, 4);
+        Add(2,2, 5);
+        Add(6,2, 6);
+        Add(4,4, 7);
 
     }
 
-    private void Add(int size, int life)
+    private void Add(int size, int life, int id)
     {
-        ProcSequence.add(new TimedProcess(life, size));
+        ProcSequence.add(new TimedProcess(life, size, id));
     }
 
     public void Run()
@@ -46,16 +46,16 @@ public class MemoryController {
             var nextProc = ProcSequence.poll();
             if(nextProc != null)
             {
-                FirstFit.NextCycle(nextProc);
-//                BestFit.NewProc(nextProc);
-//                WorstFit.NewProc(nextProc);
+//                FirstFit.NextCycle(nextProc);
+                BestFit.NextCycle(nextProc);
+//                WorstFit.NextCycle(nextProc);
 
-                FirstFit.AddFirstFit();
-//                BestFit.AddBestFit();
+//                FirstFit.AddFirstFit();
+                BestFit.AddBestFit();
 //                WorstFit.AddWorstFit();
             }
-            System.out.println("First: " + FirstFit);
-//            System.out.println("Best:  " + BestFit);
+//            System.out.println("First: " + FirstFit);
+            System.out.println("Best:  " + BestFit);
 //            System.out.println("Worst: " + WorstFit);
             Wait(WaitTime);
             if(index >= ProcSequence.size()) index = 0;

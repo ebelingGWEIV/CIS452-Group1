@@ -4,9 +4,10 @@ public class TimedProcess {
     public final int Size;
     public int ID;
 
-    TimedProcess(int life, int size) {
+    TimedProcess(int life, int size, int id) {
         this.TimeToLive = life;
         this.Size = size;
+        this.ID = id;
     }
 
 
