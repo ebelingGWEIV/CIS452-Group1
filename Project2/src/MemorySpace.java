@@ -156,9 +156,27 @@ public class MemorySpace {
 
     private boolean AddWorstFit(TimedProcess proc)
     {
-        //todo Write this method
-        System.out.println("Not implemented\n");
-        return false;
+        var openings = GetOpenSpaces(0);
+        Opening worstFit = new Opening(-1,-1); //Size is less than 0 to help with logic later on
+
+        // Find the best spot
+        for (Opening spot: openings)
+        {
+            // Will the proc fit?
+            if(spot.Size >= proc.Size)
+            {
+                if(spot.Size > worstFit.Size)
+                {
+                    worstFit = spot;
+                }
+            }
+        }
+
+        // See if we were able to find the best spot
+        if(worstFit.Start == -1) return false;
+
+        Fill(worstFit.Start, proc.Size + worstFit.Start -1, proc);
+        return true;
     }
 
 

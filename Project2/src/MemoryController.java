@@ -47,16 +47,16 @@ public class MemoryController {
             if(nextProc != null)
             {
 //                FirstFit.NextCycle(nextProc);
-                BestFit.NextCycle(nextProc);
-//                WorstFit.NextCycle(nextProc);
+//                BestFit.NextCycle(nextProc);
+                WorstFit.NextCycle(nextProc);
 
 //                FirstFit.AddFirstFit();
-                BestFit.AddBestFit();
-//                WorstFit.AddWorstFit();
+//                BestFit.AddBestFit();
+                WorstFit.AddWorstFit();
             }
 //            System.out.println("First: " + FirstFit);
-            System.out.println("Best:  " + BestFit);
-//            System.out.println("Worst: " + WorstFit);
+//            System.out.println("Best:  " + BestFit);
+            System.out.println("Worst: " + WorstFit);
             Wait(WaitTime);
             if(index >= ProcSequence.size()) index = 0;
         }
