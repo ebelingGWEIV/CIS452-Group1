@@ -33,8 +33,34 @@ public class MemoryController {
         Add(3,3, 3);
         Add(3,2, 4);
         Add(2,2, 5);
-        Add(6,2, 6);
+        Add(6,3, 6);
         Add(4,4, 7);
+
+        Add(3,6, 8);
+        Add(4,3, 9);
+
+        Add(3,4, 0);
+        Add(3,2, 1);
+        Add(2,3, 2);
+        Add(3,6, 3);
+
+        Add(4,2, 4);
+        Add(2,2, 5);
+        Add(4,3, 6);
+        Add(2,4, 7);
+        Add(1,6, 8);
+        Add(3,3, 9);
+
+        Add(3,4, 0);
+        Add(3,2, 1);
+        Add(2,4, 2);
+        Add(3,6, 3);
+        Add(4,2, 4);
+        Add(2,2, 5);
+        Add(4,3, 6);
+        Add(2,4, 7);
+        Add(3,6, 8);
+        Add(3,3, 9);
     }
 
     private void Add(int size, int life, int id)
@@ -49,24 +75,30 @@ public class MemoryController {
             var nextProc = ProcSequence.poll();
             if(nextProc != null)
             {
-                FirstFit.NextCycle(nextProc);
-                BestFit.NextCycle(nextProc);
-                WorstFit.NextCycle(nextProc);
+                FirstFit.NextCycle();
+                BestFit.NextCycle();
+                WorstFit.NextCycle();
 
                 FirstFit.AddFirstFit();
                 BestFit.AddBestFit();
                 WorstFit.AddWorstFit();
+
+                FirstFit.AddToQueue(nextProc);
+                BestFit.AddToQueue(nextProc);
+                WorstFit.AddToQueue(nextProc);
             }
 
             try {
                 System.out.println("First: " + FirstFit);
                 UpdateGUI.invoke(null, 0, FirstFit.toString());
+                UpdateNext.invoke(null, 0, FirstFit.GetNextProc());
                 System.out.println("Best:  " + BestFit);
                 UpdateGUI.invoke(null, 1, BestFit.toString());
+                UpdateNext.invoke(null, 1, BestFit.GetNextProc());
                 System.out.println("Worst: " + WorstFit);
                 UpdateGUI.invoke(null, 2, WorstFit.toString());
+                UpdateNext.invoke(null, 2, BestFit.GetNextProc());
                 UpdateTime.invoke(null);
-                UpdateNext.invoke(null, ProcSequence.peek().Size);
 
             }
             catch (Exception ex){

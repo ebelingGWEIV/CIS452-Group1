@@ -19,6 +19,20 @@ public class GUI {
     static JTextField worst[];
     static JTextField best[];
 
+    static Color c1 = new Color(0xF15555);
+    static Color c2 = new Color(243, 129, 53);
+    static Color c3 = new Color(0xF8CA3B);
+    static Color c4 = new Color(0xE8EE2E);
+    static Color c5 = new Color(0xA7FF4F);
+    static Color c6 = new Color(0x42FF55);
+    static Color c7 = new Color(0x40FFAC);
+    static Color c8 = new Color(0x4DDDFF);
+    static Color c9 = new Color(0x6F8EFD);
+    static Color c10 = new Color(0x9345FF);
+
+    static Color[] colors = {c1, c2, c3, c4, c5, c6, c7, c8, c9, c10};
+
+
     public Method GetUpdateMethod() throws NoSuchMethodException {
         Method m = GUI.class.getDeclaredMethod("UpdateMemorySpace", int.class, String.class);
         return m;
@@ -30,7 +44,7 @@ public class GUI {
     }
 
     public Method GetNext() throws NoSuchMethodException{
-        Method m = GUI.class.getDeclaredMethod("UpdateNext", int.class);
+        Method m = GUI.class.getDeclaredMethod("UpdateNext", int.class, int.class);
         return m;
     }
 
@@ -71,17 +85,17 @@ public class GUI {
             first[i] = new JTextField("");
             first[i].setColumns(5);
             first[i].setHorizontalAlignment(JTextField.CENTER);
-            first[i].setBackground(Color.ORANGE);
+            first[i].setBackground(Color.white);
 
             best[i] = new JTextField("");
             best[i].setColumns(5);
             best[i].setHorizontalAlignment(JTextField.CENTER);
-            best[i].setBackground(Color.ORANGE);
+            best[i].setBackground(Color.white);
 
             worst[i] = new JTextField("");
             worst[i].setColumns(5);
             worst[i].setHorizontalAlignment(JTextField.CENTER);
-            worst[i].setBackground(Color.ORANGE);
+            worst[i].setBackground(Color.white);
 
             cPane.add(first[i]);
             cPane.add(best[i]);
@@ -99,6 +113,7 @@ public class GUI {
         frame.add(cPane);
         frame.add(namePane, BorderLayout.NORTH);
         frame.setVisible(true);
+
     }
 
     /***
@@ -117,10 +132,11 @@ public class GUI {
             for (int j = 0; j < 15; j++){
                 if(s.charAt(j) != '_') {
                     first[j].setText(s.charAt(j) + "");
-                    first[j].setBackground(Color.pink);
+                    int a = Character.getNumericValue(s.charAt(j));
+                    first[j].setBackground(colors[a]);
                 }
                 else{
-                    first[j].setBackground(Color.ORANGE);
+                    first[j].setBackground(Color.white);
                     first[j].setText("");
                 }
             }
@@ -129,10 +145,11 @@ public class GUI {
             for (int k = 0; k < 15; k++){
                 if(s.charAt(k) != '_') {
                     best[k].setText(s.charAt(k) + "");
-                    best[k].setBackground(Color.pink);
+                    int a = Character.getNumericValue(s.charAt(k));
+                    best[k].setBackground(colors[a]);
                 }
                 else{
-                    best[k].setBackground(Color.ORANGE);
+                    best[k].setBackground(Color.white);
                     best[k].setText("");
                 }
             }
@@ -141,10 +158,11 @@ public class GUI {
             for (int l = 0; l <15; l++){
                 if(s.charAt(l) != '_'){
                     worst[l].setText(s.charAt(l) +"");
-                    worst[l].setBackground(Color.PINK);
+                    int a = Character.getNumericValue(s.charAt(l));
+                    worst[l].setBackground(colors[a]);
                 }
                 else{
-                    worst[l].setBackground(Color.ORANGE);
+                    worst[l].setBackground(Color.white);
                     worst[l].setText("");
                 }
             }
@@ -156,7 +174,7 @@ public class GUI {
         timeField.setText("Time Units Passed: " + clock);
     }
 
-    public static void UpdateNext(int size){
+    public static void UpdateNext(int column, int size){
         upNext.setText("Next Process Size to be Allocated: \n"
                 + "First: " + size + "\n"
                 + "Best: " + size + "\n"

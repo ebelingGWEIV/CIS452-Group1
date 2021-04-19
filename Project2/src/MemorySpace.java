@@ -12,6 +12,9 @@ public class MemorySpace {
         return MyMemSpace;
     }
 
+    public int GetNextProc(){
+        return procQueue.get(0).Size;
+    }
 
     public MemorySpace(int maxSize) {
         MyMemSpace = new TimedProcess[maxSize];
@@ -23,9 +26,8 @@ public class MemorySpace {
     /***
      * Is run before at the start of every new cycle (1 second)
      */
-    public void NextCycle(TimedProcess newProc)
+    public void NextCycle()
     {
-        AddToQueue(newProc);
         List<Integer> ids = new LinkedList<>();
 
         for(int index = 0; index < Max; index++)
@@ -44,12 +46,13 @@ public class MemorySpace {
         }
     }
 
+
     /**
      * Creates a copy and adds the copy to the queue.
      * This is a fix because Java forces objects to be sent by reference, and we don't want that for this situation.
      * @param proc Process to add to queue
      */
-    private void AddToQueue(TimedProcess proc)
+    public void AddToQueue(TimedProcess proc)
     {
         TimedProcess newProc = new TimedProcess(proc.GetTimeToLive(), proc.Size, proc.ID);
         procQueue.add(newProc);
