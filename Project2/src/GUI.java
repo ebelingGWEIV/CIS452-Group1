@@ -203,7 +203,6 @@ public class GUI {
      * Update the number of time units passed so far.
      */
     public static void UpdateTime(){
-        clock++;
         timeField.setText("Time Units Passed: " + clock);
     }
 
