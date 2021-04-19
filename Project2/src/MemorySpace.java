@@ -12,6 +12,7 @@ public class MemorySpace {
         return MyMemSpace;
     }
 
+
     public MemorySpace(int maxSize) {
         MyMemSpace = new TimedProcess[maxSize];
         procQueue = new Vector<>();

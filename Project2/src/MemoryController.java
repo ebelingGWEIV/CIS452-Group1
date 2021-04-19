@@ -10,11 +10,16 @@ public class MemoryController {
     private MemorySpace WorstFit;
 
     private Queue<TimedProcess> ProcSequence;
-    private Method UpdateGUI;
 
-    MemoryController(int maxSpace, Method updateMethod)
+    private Method UpdateGUI;
+    private Method UpdateTime;
+    private Method UpdateNext;
+
+    MemoryController(int maxSpace, Method updateMethod, Method updateTime, Method upNext)
     {
         UpdateGUI = updateMethod;
+        UpdateTime = updateTime;
+        UpdateNext = upNext;
 
         ProcSequence = new LinkedList<>();
         FirstFit = new MemorySpace(maxSpace);
@@ -60,7 +65,9 @@ public class MemoryController {
                 UpdateGUI.invoke(null, 1, BestFit.toString());
                 System.out.println("Worst: " + WorstFit);
                 UpdateGUI.invoke(null, 2, WorstFit.toString());
-                //ResetGUI.invoke(null);
+                UpdateTime.invoke(null);
+                UpdateNext.invoke(null, ProcSequence.peek().Size);
+
             }
             catch (Exception ex){
                 System.out.println("Couldn't update GUI");

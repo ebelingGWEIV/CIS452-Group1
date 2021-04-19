@@ -7,11 +7,14 @@ class HelloWorld
     public static void main(String[] args) throws InterruptedException, NoSuchMethodException {
 
         var myGUI = new GUI();
-        myGUI.displayGUI();
         var updateMethod = myGUI.GetUpdateMethod();
+        var updateTime = myGUI.GetTimeMethod();
+        var updateNext = myGUI.GetNext();
+
+        myGUI.displayGUI();
 
         try {
-            var controller = new MemoryController(15, updateMethod);
+            var controller = new MemoryController(15, updateMethod, updateTime, updateNext);
             controller.Run();
         }
         catch (Exception ex){

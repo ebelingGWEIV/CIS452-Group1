@@ -10,8 +10,10 @@ public class GUI {
     JPanel lPane;
     JPanel namePane;
 
-    JTextArea upNext;
-    JTextArea timeField;
+    static JTextArea upNext;
+    static JTextArea timeField;
+
+    static int clock = 0;
 
     static JTextField first[];
     static JTextField worst[];
@@ -22,6 +24,15 @@ public class GUI {
         return m;
     }
 
+    public Method GetTimeMethod() throws NoSuchMethodException {
+        Method m = GUI.class.getDeclaredMethod("UpdateTime");
+        return m;
+    }
+
+    public Method GetNext() throws NoSuchMethodException{
+        Method m = GUI.class.getDeclaredMethod("UpdateNext", int.class);
+        return m;
+    }
 
     public void displayGUI(){
         JFrame frame = new JFrame("Project Two");
@@ -48,8 +59,11 @@ public class GUI {
         worst = new JTextField[15];
 
         JTextField f = new JTextField("First Fit");
+        f.setHorizontalAlignment(JTextField.CENTER);
         JTextField b = new JTextField("Best Fit");
+        b.setHorizontalAlignment(JTextField.CENTER);
         JTextField w = new JTextField("Worst Fit");
+        w.setHorizontalAlignment(JTextField.CENTER);
         JTextField name = new JTextField("CIS 452 Project Two");
         name.setEditable(false);
 
@@ -95,7 +109,6 @@ public class GUI {
      */
     public static void UpdateMemorySpace(int column, String memSpace)
     {
-        //System.out.println(memSpace);
         String s = memSpace;
         String s2 = "";
         s = s.substring(1, s.length()-1);
@@ -138,30 +151,15 @@ public class GUI {
         }
     }
 
-//    public static void ResetMemorySpace(){
-//        for (int k = 0; k < 15; k++) {
-//            first[k].setText("");
-//            first[k].setBackground(Color.ORANGE);
-//
-//            best[k].setText("");
-//            best[k].setBackground(Color.ORANGE);
-//
-//            worst[k].setText("");
-//            worst[k].setBackground(Color.ORANGE);
-//        }
-//    }
-
-
-    public void updateTime(){
-
+    public static void UpdateTime(){
+        clock++;
+        timeField.setText("Time Units Passed: " + clock);
     }
 
-    public void updateNext(int size){
+    public static void UpdateNext(int size){
         upNext.setText("Next Process Size to be Allocated: \n"
                 + "First: " + size + "\n"
                 + "Best: " + size + "\n"
                 + "Worst: " + size + '\n');
-        upNext.revalidate();
-        upNext.repaint();
     }
 }
