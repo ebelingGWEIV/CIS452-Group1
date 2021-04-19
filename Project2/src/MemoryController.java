@@ -1,4 +1,3 @@
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -61,6 +60,7 @@ public class MemoryController {
                 UpdateGUI.invoke(null, 1, BestFit.toString());
                 System.out.println("Worst: " + WorstFit);
                 UpdateGUI.invoke(null, 2, WorstFit.toString());
+                //ResetGUI.invoke(null);
             }
             catch (Exception ex){
                 System.out.println("Couldn't update GUI");
