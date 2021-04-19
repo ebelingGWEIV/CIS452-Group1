@@ -53,7 +53,7 @@ public class MemoryController {
 
         Add(3,4, 0);
         Add(3,2, 1);
-        Add(5,4, 2); //
+        Add(5,4, 2);
         Add(3,6, 3);
         Add(4,2, 4);
         Add(2,2, 5);

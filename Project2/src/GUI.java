@@ -174,10 +174,31 @@ public class GUI {
         timeField.setText("Time Units Passed: " + clock);
     }
 
+    // Used for tracking UpdateNext. If java had static local variables they wouldn't be needed.
+    private static int updateCounter = 0;
+    private static int firstSize;
+    private static int bestSize;
+    private static int worstSize;
+
     public static void UpdateNext(int column, int size){
+        updateCounter++;
+
+        switch(column){
+            case 0:
+                firstSize = size;
+                break;
+            case 1:
+                bestSize = size;
+                break;
+            case 2:
+                worstSize = size;
+                break;
+        }
+
+        if(updateCounter % 3 == 0)
         upNext.setText("Next Process Size to be Allocated: \n"
-                + "First: " + size + "\n"
-                + "Best: " + size + "\n"
-                + "Worst: " + size + '\n');
+                + "First: " + firstSize + "\n"
+                + "Best: " + bestSize + "\n"
+                + "Worst: " + worstSize + '\n');
     }
 }
