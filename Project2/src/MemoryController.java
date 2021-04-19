@@ -1,3 +1,5 @@
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -9,9 +11,12 @@ public class MemoryController {
     private MemorySpace WorstFit;
 
     private Queue<TimedProcess> ProcSequence;
+    private Method UpdateGUI;
 
-    MemoryController(int maxSpace)
+    MemoryController(int maxSpace, Method updateMethod)
     {
+        UpdateGUI = updateMethod;
+
         ProcSequence = new LinkedList<>();
         FirstFit = new MemorySpace(maxSpace);
         BestFit = new MemorySpace(maxSpace);
@@ -33,8 +38,7 @@ public class MemoryController {
         ProcSequence.add(new TimedProcess(life, size, id));
     }
 
-    public void Run()
-    {
+    public void Run() {
         int index;
         for(index = 0; ProcSequence.size() > 0; index++)
         {
@@ -49,9 +53,19 @@ public class MemoryController {
                 BestFit.AddBestFit();
                 WorstFit.AddWorstFit();
             }
-            System.out.println("First: " + FirstFit);
-            System.out.println("Best:  " + BestFit);
-            System.out.println("Worst: " + WorstFit);
+
+            try {
+                System.out.println("First: " + FirstFit);
+                UpdateGUI.invoke(null, 0, FirstFit.toString());
+                System.out.println("Best:  " + BestFit);
+                UpdateGUI.invoke(null, 1, BestFit.toString());
+                System.out.println("Worst: " + WorstFit);
+                UpdateGUI.invoke(null, 2, WorstFit.toString());
+            }
+            catch (Exception ex){
+                System.out.println("Couldn't update GUI");
+                System.out.println(ex);
+            }
             Wait(WaitTime);
             if(index >= ProcSequence.size()) index = 0;
         }

@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Method;
 
 /*
     Class to display and update panels of the GUI
@@ -15,6 +16,12 @@ public class GUI {
     JTextField first[];
     JTextField worst[];
     JTextField best[];
+
+    public Method GetUpdateMethod() throws NoSuchMethodException {
+        Method m = GUI.class.getDeclaredMethod("UpdateMemorySpace", int.class, String.class);
+        return m;
+    }
+
 
     public void displayGUI(){
         JFrame frame = new JFrame("Project Two");
@@ -75,6 +82,17 @@ public class GUI {
         frame.add(cPane);
         frame.add(namePane, BorderLayout.NORTH);
         frame.setVisible(true);
+    }
+
+    /***
+     * 1 First
+     * 2 Best
+     * 3 Worst
+     * @param column
+     */
+    public static void UpdateMemorySpace(int column, String memSpace)
+    {
+        System.out.println("we made it!\n");
     }
 
     public void updateColumn(int size, int id){
