@@ -113,7 +113,7 @@ public class MemorySpace {
     }
 
     /**
-     * Add using the best fit method.
+     * Add using the first fit method.
      * @param proc The timed process to add to the memory space.
      * @return true If the process was added.
      */
@@ -142,6 +142,11 @@ public class MemorySpace {
             return false;
     }
 
+    /**
+     * Add using the best fit method.
+     * @param proc The timed process to add to the memory space.
+     * @return true If the process was added.
+     */
     private boolean AddBestFit(TimedProcess proc)
     {
         var openings = GetOpenSpaces(0);
@@ -249,6 +254,10 @@ public class MemorySpace {
         }
     }
 
+    /***
+     * Used before the GUI was complete to verify proper operation of everything.
+     * @return
+     */
     @Override
     public String toString()
     {
@@ -272,9 +281,13 @@ public class MemorySpace {
       return out.toString();
     }
 
+    /***
+     * A class for tracking openings.
+     */
     private class Opening {
         public int Start;
         public int Size;
+
         public Opening(int start,int end) {
             this.Start = start;
             this.Size = end;

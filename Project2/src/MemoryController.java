@@ -68,6 +68,9 @@ public class MemoryController {
         ProcSequence.add(new TimedProcess(life, size, id));
     }
 
+    /**
+     * Adds processes and waits and notifies the GUI
+     */
     public void Run() {
         int index;
         for(index = 0; ProcSequence.size() > 0; index++)
@@ -75,14 +78,17 @@ public class MemoryController {
             var nextProc = ProcSequence.poll();
             if(nextProc != null)
             {
+                // Start a new round
                 FirstFit.NextCycle();
                 BestFit.NextCycle();
                 WorstFit.NextCycle();
 
+                // Add the process
                 FirstFit.AddFirstFit();
                 BestFit.AddBestFit();
                 WorstFit.AddWorstFit();
 
+                // Submit a new process to the queue
                 FirstFit.AddToQueue(nextProc);
                 BestFit.AddToQueue(nextProc);
                 WorstFit.AddToQueue(nextProc);

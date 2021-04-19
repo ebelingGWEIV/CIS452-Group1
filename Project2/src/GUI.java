@@ -36,16 +36,31 @@ public class GUI {
     static Color[] colors = {c1, c2, c3, c4, c5, c6, c7, c8, c9, c10};
 
 
+    /**
+     * Used by the controller to notify the GUI that the memory space has been updated.
+     * @return The method to invoke
+     * @throws NoSuchMethodException
+     */
     public Method GetUpdateMethod() throws NoSuchMethodException {
         Method m = GUI.class.getDeclaredMethod("UpdateMemorySpace", int.class, String.class);
         return m;
     }
 
+    /**
+     * Used by the controller to notify the GUI of a new cycle
+     * @return The method to invoke
+     * @throws NoSuchMethodException
+     */
     public Method GetTimeMethod() throws NoSuchMethodException {
         Method m = GUI.class.getDeclaredMethod("UpdateTime");
         return m;
     }
 
+    /**
+     * Used by the controller to notify the GUI of what the next process will be
+     * @return The method to invoke
+     * @throws NoSuchMethodException
+     */
     public Method GetNext() throws NoSuchMethodException{
         Method m = GUI.class.getDeclaredMethod("UpdateNext", int.class, int.class);
         return m;
@@ -184,11 +199,19 @@ public class GUI {
         }
     }
 
+    /**
+     * Update the number of time units passed so far.
+     */
     public static void UpdateTime(){
         clock++;
         timeField.setText("Time Units Passed: " + clock);
     }
 
+    /**
+     * Update the size of the next process to be allocated.
+     * @param column 1 First, 2 Best, 3 Worst
+     * @param size the size of the next process to be allocated
+     */
     public static void UpdateNext(int column, int size){
         if (column == 0) {
             f2.setText("First: " + size + "\n");
