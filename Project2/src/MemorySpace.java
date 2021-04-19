@@ -164,6 +164,11 @@ public class MemorySpace {
         return true;
     }
 
+    /**
+     * Add another process to the memory space using the WorstFit algorithm.
+     * @param proc The process to add.
+     * @return True if the process was added.
+     */
     private boolean AddWorstFit(TimedProcess proc)
     {
         var openings = GetOpenSpaces(0);
@@ -190,8 +195,12 @@ public class MemorySpace {
     }
 
 
-    //private @NotNull
-    Vector<Opening> GetOpenSpaces(int start)
+    /***
+     * Finds all the open spaces in the memory space.
+     * @param start The index of where to start. Usually zero.
+     * @return A vector of available openings in the memory space.
+     */
+    private Vector<Opening> GetOpenSpaces(int start)
     {
         Vector<Opening> openings = new Vector<>();
 
