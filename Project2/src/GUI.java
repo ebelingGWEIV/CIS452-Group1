@@ -12,6 +12,9 @@ public class GUI {
 
     static JTextArea upNext;
     static JTextArea timeField;
+    static JTextArea f2;
+    static JTextArea b2;
+    static JTextArea w2;
 
     static int clock = 0;
 
@@ -66,7 +69,7 @@ public class GUI {
 
 
         cPane.setLayout(new GridLayout(16, 3));
-        lPane.setLayout(new GridLayout(2, 1));
+        lPane.setLayout(new GridLayout(5, 1));
 
         first = new JTextField[15];
         best = new JTextField[15];
@@ -74,10 +77,19 @@ public class GUI {
 
         JTextField f = new JTextField("First Fit");
         f.setHorizontalAlignment(JTextField.CENTER);
+        f2 = new JTextArea("First: ");
+        f2.setEditable(false);
+
         JTextField b = new JTextField("Best Fit");
+        b2 = new JTextArea("Best: ");
         b.setHorizontalAlignment(JTextField.CENTER);
+        b2.setEditable(false);
+
         JTextField w = new JTextField("Worst Fit");
+        w2 = new JTextArea("Worst: ");
         w.setHorizontalAlignment(JTextField.CENTER);
+        w2.setEditable(false);
+
         JTextField name = new JTextField("CIS 452 Project Two");
         name.setEditable(false);
 
@@ -107,6 +119,9 @@ public class GUI {
         cPane.add(w);
         lPane.add(timeField);
         lPane.add(upNext);
+        lPane.add(f2);
+        lPane.add(b2);
+        lPane.add(w2);
         namePane.add(name);
 
         frame.add(lPane, BorderLayout.WEST);
@@ -174,31 +189,15 @@ public class GUI {
         timeField.setText("Time Units Passed: " + clock);
     }
 
-    // Used for tracking UpdateNext. If java had static local variables they wouldn't be needed.
-    private static int updateCounter = 0;
-    private static int firstSize;
-    private static int bestSize;
-    private static int worstSize;
-
     public static void UpdateNext(int column, int size){
-        updateCounter++;
-
-        switch(column){
-            case 0:
-                firstSize = size;
-                break;
-            case 1:
-                bestSize = size;
-                break;
-            case 2:
-                worstSize = size;
-                break;
+        if (column == 0) {
+            f2.setText("First: " + size + "\n");
         }
-
-        if(updateCounter % 3 == 0)
-        upNext.setText("Next Process Size to be Allocated: \n"
-                + "First: " + firstSize + "\n"
-                + "Best: " + bestSize + "\n"
-                + "Worst: " + worstSize + '\n');
+        else if (column == 1){
+            b2.setText("Best: " + size + "\n");
+        }
+        else {
+            w2.setText("Worst: " + size + "\n");
+        }
     }
 }
