@@ -1,4 +1,3 @@
-import java.lang.Thread;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -27,7 +26,6 @@ public class MemoryController {
         Add(2,2, 5);
         Add(6,2, 6);
         Add(4,4, 7);
-
     }
 
     private void Add(int size, int life, int id)
@@ -51,8 +49,8 @@ public class MemoryController {
                 BestFit.AddBestFit();
                 WorstFit.AddWorstFit();
             }
-//            System.out.println("First: " + FirstFit);
-//            System.out.println("Best:  " + BestFit);
+            System.out.println("First: " + FirstFit);
+            System.out.println("Best:  " + BestFit);
             System.out.println("Worst: " + WorstFit);
             Wait(WaitTime);
             if(index >= ProcSequence.size()) index = 0;

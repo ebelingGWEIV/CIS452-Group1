@@ -1,5 +1,3 @@
-import org.jetbrains.annotations.NotNull;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
@@ -191,7 +189,7 @@ public class MemorySpace {
     }
 
 
-    private @NotNull
+    //private @NotNull
     Vector<Opening> GetOpenSpaces(int start)
     {
         Vector<Opening> openings = new Vector<>();
@@ -248,6 +246,7 @@ public class MemorySpace {
           String spot;
           try{
               spot = (MyMemSpace[(index)] != null) ? "" + MyMemSpace[index].ID : "_";
+
           }
           catch (Exception ex)
           {
