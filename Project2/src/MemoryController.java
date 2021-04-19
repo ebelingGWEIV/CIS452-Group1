@@ -53,7 +53,7 @@ public class MemoryController {
 
         Add(3,4, 0);
         Add(3,2, 1);
-        Add(2,4, 2);
+        Add(5,4, 2); //
         Add(3,6, 3);
         Add(4,2, 4);
         Add(2,2, 5);
@@ -89,13 +89,13 @@ public class MemoryController {
             }
 
             try {
-                System.out.println("First: " + FirstFit);
+                System.out.println("First: " + FirstFit + "Best:  " + BestFit + "Worst: " + WorstFit);
                 UpdateGUI.invoke(null, 0, FirstFit.toString());
                 UpdateNext.invoke(null, 0, FirstFit.GetNextProc());
-                System.out.println("Best:  " + BestFit);
+//                System.out.println("Best:  " + BestFit);
                 UpdateGUI.invoke(null, 1, BestFit.toString());
                 UpdateNext.invoke(null, 1, BestFit.GetNextProc());
-                System.out.println("Worst: " + WorstFit);
+//                System.out.println("Worst: " + WorstFit);
                 UpdateGUI.invoke(null, 2, WorstFit.toString());
                 UpdateNext.invoke(null, 2, BestFit.GetNextProc());
                 UpdateTime.invoke(null);
