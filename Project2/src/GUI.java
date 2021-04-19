@@ -204,6 +204,7 @@ public class GUI {
      */
     public static void UpdateTime(){
         timeField.setText("Time Units Passed: " + clock);
+        clock++;
     }
 
     /**
